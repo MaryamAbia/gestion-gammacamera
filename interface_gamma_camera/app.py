@@ -415,5 +415,14 @@ elif page == "Rappels de contrôles":
 # Fin du bloc principal HTML (div)
 st.markdown('</div>', unsafe_allow_html=True)
 #logo fmpm 
-st.sidebar.image("logofmpm.png", width=120)
+import os
+
+logo_path = "interface_gamma_camera/logofmpm.png"
+if os.path.exists(logo_path):
+    st.sidebar.image(logo_path, width=120)
+else:
+    st.sidebar.warning("⚠️ Logo non trouvé. Vérifiez le chemin.")
+
+
+
 
