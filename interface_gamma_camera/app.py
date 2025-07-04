@@ -414,3 +414,6 @@ elif page == "Rappels de contrôles":
 
 # Fin du bloc principal HTML (div)
 st.markdown('</div>', unsafe_allow_html=True)
+#logo fmpm 
+st.sidebar.image("logofmpm.png", width=120)
+
