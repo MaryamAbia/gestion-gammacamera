@@ -7,11 +7,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# Connexion à la base de données SQLite
+# Database setup
 conn = sqlite3.connect("gamma_camera.db", check_same_thread=False)
 cursor = conn.cursor()
 
-# Création des tables si elles n'existent pas
+# Create tables if they don't exist
 cursor.execute('''CREATE TABLE IF NOT EXISTS controle_qualite (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT,
@@ -52,10 +52,10 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS utilisateurs (
 
 conn.commit()
 
-# Fonction d'envoi d'e-mail
+# Email sending function (update your credentials!)
 def envoyer_email(destinataire, sujet, message):
     sender_email = "maryamabia14@gmail.com"
-    app_password = "wyva itgr vrmu keet"  # Remplace par ton vrai mot de passe d'application
+    app_password = "wyva itgr vrmu keet"  # Replace with your app password
 
     msg = MIMEMultipart()
     msg["From"] = sender_email
@@ -73,56 +73,112 @@ def envoyer_email(destinataire, sujet, message):
         st.error(f"Erreur lors de l'envoi de l'email : {e}")
         return False
 
-# CSS pour style + background image
+# Remove global background, style sections with colored backgrounds under text,
+# black text color, and add animations with CSS and keyframes
 st.markdown("""
 <style>
+/* Global body reset - no background */
 .stApp {
-    background-image: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    /* background-attachment: fixed; */ /* Retirer pour mobile */
-    color: white;
+    background-color: #f9f9f9;
+    color: black;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Section container with subtle background under text */
 .section-container {
-    background: rgba(255, 255, 255, 0.85);
+    background: #e6e6fa;  /* lavender color, can customize */
     border-radius: 15px;
-    padding: 25px 40px;
+    padding: 30px 40px;
     margin-bottom: 30px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-    color: #1f005c;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    color: black !important;
 }
 
+/* Titles inside sections */
 h2.section-title {
     color: #4b007a;
-    margin-bottom: 10px;
-    font-weight: bold;
-    font-size: 22px;
+    margin-bottom: 15px;
+    font-weight: 700;
+    font-size: 26px;
 }
 
+/* Title and Bienvenu animation */
+@keyframes fadeInSlideDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animated-title, .animated-bienvenu {
+    animation-name: fadeInSlideDown;
+    animation-duration: 1.2s;
+    animation-fill-mode: forwards;
+    opacity: 0;
+}
+
+.animated-bienvenu {
+    animation-delay: 0.2s;
+    font-size: 30px;
+    font-weight: 700;
+    color: #5b2a86;
+    margin-bottom: 5px;
+}
+
+.animated-title {
+    animation-delay: 0.8s;
+    font-size: 36px;
+    font-weight: 900;
+    color: #4b007a;
+    margin-bottom: 40px;
+}
+
+/* Inputs and buttons styling */
 input, select, textarea {
     border-radius: 6px;
     border: 1px solid #ccc;
-    padding: 6px 12px;
+    padding: 8px 12px;
     font-size: 16px;
     color: #333;
 }
 
-.stApp > main {
-    overflow-y: auto;
-    max-height: 90vh;
+div.stButton > button:first-child {
+    background-color: #5b2a86;
+    color: white;
+    border-radius: 8px;
+    padding: 10px 22px;
+    border: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+div.stButton > button:first-child:hover {
+    background-color: #7d4ba6;
+    cursor: pointer;
+}
+
+.stCheckbox > label {
+    color: #4b007a;
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 12px;
 }
 </style>
 """, unsafe_allow_html=True)
 
 st.set_page_config(layout="wide")
 
-st.title("Interface de gestion - Gamma Caméra")
+# Animated Bienvenu and Title at the top
+st.markdown('<div class="animated-bienvenu">BIENVENU</div>', unsafe_allow_html=True)
+st.markdown('<div class="animated-title">Interface de gestion - Gamma Caméra</div>', unsafe_allow_html=True)
 st.markdown("Développée par **Maryam Abia** – Suivi du contrôle qualité en médecine nucléaire")
 
-# Initialiser états des sections (si غير موجودين)
+# Initialize session state for sections
 sections = [
     "gestion_intervenants",
     "controle_qualite",
@@ -136,7 +192,6 @@ for sec in sections:
     if sec not in st.session_state:
         st.session_state[sec] = False
 
-# Fonction pour afficher section avec checkbox toggle
 def section_container_checkbox(key, label, content_function):
     st.markdown('<div class="section-container">', unsafe_allow_html=True)
     show = st.checkbox(label, value=st.session_state[key], key=f"chk_{key}")
@@ -144,8 +199,6 @@ def section_container_checkbox(key, label, content_function):
     if show:
         content_function()
     st.markdown('</div>', unsafe_allow_html=True)
-
-# Contenus des sections
 
 def contenu_gestion_intervenants():
     st.header("👥 Gestion des intervenants")
@@ -256,7 +309,7 @@ def contenu_rappels_controles():
         else:
             st.error("Erreur lors de l'envoi")
 
-# Affichage des sections
+# Show sections with background under text and black text color
 section_container_checkbox("gestion_intervenants", "👥 Gestion des intervenants", contenu_gestion_intervenants)
 section_container_checkbox("controle_qualite", "📅 Suivi des contrôles de qualité", contenu_controle_qualite)
 section_container_checkbox("suivi_pannes", "🛠️ Suivi des pannes", contenu_suivi_pannes)
