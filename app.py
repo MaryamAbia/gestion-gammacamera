@@ -52,15 +52,19 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS utilisateurs (
 
 conn.commit()
 
-st.App {
-    background-image: url('https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.freepik.com%2Fpremium-ai-image%2Fclear-nuclear-medicine-image-showing-distribution-radiotracer-within-body-highlighting-areas-high-uptake-set-specialized-imaging-center-with-advanced-technology_267592288.htm&psig=AOvVaw2-Q9eywj3K6ocud-cVbQpT&ust=1752247411104000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCLi3zL3Mso4DFQAAAAAdAAAAABAE');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    color: black;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+st.markdown("""
+    <style>
+    .stApp {
+        background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1470&q=80');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        color: black;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 
 
