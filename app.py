@@ -77,7 +77,7 @@ def envoyer_email(destinataire, sujet, message):
 st.markdown("""
 <style>
 .stApp {
-    background-image: url('https://st2.depositphotos.com/9198222/12247/v/600/depositphotos_122478848-stock-video-atom-white-3d-icon.jpg');
+    background-image: url('https://st2.depositphotos.com/2890953/5471/i/600/depositphotos_54710477-stock-illustration-science-atom-globe-with-orbits.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
