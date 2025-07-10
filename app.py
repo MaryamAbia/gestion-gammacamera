@@ -112,10 +112,10 @@ st.markdown("Développée par **Maryam Abia** – Suivi du contrôle qualité en
 # 📌 Accueil
 with st.expander("🏠 Accueil", expanded=True):
     st.image("https://cdn-icons-png.flaticon.com/512/2872/2872613.png", width=100)
-    st.write(\"\"\"
+    st.write("""
     Cette interface innovante a été développée dans le cadre d’un projet de fin d’études pour suivre le contrôle de qualité de la gamma caméra.
     ☢️ Radioprotection | ⚛️ Imagerie nucléaire | 🧪 Suivi qualité
-    \"\"\")
+    """)
 
 # 👥 Utilisateurs
 with st.expander("👥 Gestion des intervenants"):
