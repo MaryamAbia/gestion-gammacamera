@@ -73,7 +73,7 @@ st.set_page_config(layout="wide")
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] {
-        background-image: url('https://static8.depositphotos.com/1483427/973/i/450/depositphotos_9733512-stock-photo-x-ray-nuclear.jpg');
+        background-image: url('https://images.unsplash.com/photo-1581093588401-22c7e6f2a95d?auto=format&fit=crop&w=1950&q=80');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
