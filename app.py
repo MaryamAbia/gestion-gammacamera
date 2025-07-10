@@ -82,7 +82,7 @@ st.markdown("""
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed;
-    color: white;
+    color: black;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -102,7 +102,7 @@ h2.section-title {
 
 button.section-toggle {
     background-color: #5b2a86;
-    color: white;
+    color: black;
     border-radius: 8px;
     padding: 8px 20px;
     border: none;
