@@ -7,7 +7,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# Connexion à la base de données
+# Connexion à la base de données SQLite
 conn = sqlite3.connect("gamma_camera.db", check_same_thread=False)
 cursor = conn.cursor()
 
@@ -55,7 +55,7 @@ conn.commit()
 # Fonction d'envoi d'e-mail
 def envoyer_email(destinataire, sujet, message):
     sender_email = "maryamabia14@gmail.com"
-    app_password = "wyva itgr vrmu keet"
+    app_password = "wyva itgr vrmu keet"  # ATTENTION: Mets ton vrai mot de passe d'application ici
 
     msg = MIMEMultipart()
     msg["From"] = sender_email
@@ -70,89 +70,94 @@ def envoyer_email(destinataire, sujet, message):
         server.quit()
         return True
     except Exception as e:
-        print(f"Erreur lors de l'envoi de l'email : {e}")
+        st.error(f"Erreur lors de l'envoi de l'email : {e}")
         return False
 
-# Config page + CSS avec image background et styles pour sections
-st.set_page_config(layout="wide")
-
-# Style CSS avec background image + transparence sections
+# CSS - Background app + styles sections + boutons
 st.markdown("""
-    <style>
-    /* Image background couvrante */
-    .stApp {
-        background-image: url('https://depositphotos.com/fr/photo/dna-and-radioactive-symbols-118319222.html');
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        color: white;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+<style>
+.stApp {
+    background-image: url('https://st2.depositphotos.com/9198222/12247/v/600/depositphotos_122478848-stock-video-atom-white-3d-icon.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
 
-    /* style blocs (sections) بخلفية شفافة بيضاء مع ظل */
-    .block-container {
-        background-color: rgba(255, 255, 255, 0.85);
-        border-radius: 15px;
-        padding: 25px 40px 40px 40px;
-        color: #1f005c;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-        margin-bottom: 30px;
-    }
+.section-container {
+    background: rgba(255, 255, 255, 0.85);
+    border-radius: 15px;
+    padding: 25px 40px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    color: #1f005c;
+}
 
-    h1, h2, h3 {
-        color: #4b007a;
-    }
+h2.section-title {
+    color: #4b007a;
+    margin-bottom: 10px;
+}
 
-    /* ألوان الأزرار */
-    div.stButton > button:first-child {
-        background-color: #5b2a86;
-        color: white;
-        border-radius: 8px;
-        padding: 8px 20px;
-        border: none;
-        font-weight: bold;
-        transition: background-color 0.3s ease;
-    }
-    div.stButton > button:first-child:hover {
-        background-color: #7d4ba6;
-        cursor: pointer;
-    }
+button.section-toggle {
+    background-color: #5b2a86;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 20px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 15px;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    text-align: left;
+    font-size: 18px;
+}
+button.section-toggle:hover {
+    background-color: #7d4ba6;
+}
 
-    /* Inputs */
-    .stTextInput>div>div>input,
-    .stSelectbox>div>div>select,
-    .stDateInput>div>div>input {
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        padding: 6px 12px;
-        font-size: 16px;
-        color: #333;
-    }
+input, select, textarea {
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    padding: 6px 12px;
+    font-size: 16px;
+    color: #333;
+}
 
-    /* file uploader */
-    .stFileUploader>div>div>input {
-        color: #5b2a86;
-        font-weight: 600;
-    }
-    </style>
+.stApp > main {
+    overflow-y: auto;
+    max-height: 90vh;
+}
+</style>
 """, unsafe_allow_html=True)
 
-# Title and subtitle
+st.set_page_config(layout="wide")
+
 st.title("Interface de gestion - Gamma Caméra")
 st.markdown("Développée par **Maryam Abia** – Suivi du contrôle qualité en médecine nucléaire")
 
-# Section Accueil
-with st.expander("🏠 Accueil", expanded=True):
-    st.image("https://cdn-icons-png.flaticon.com/512/2872/2872613.png", width=100)
-    st.write("""
-    Cette interface innovante a été développée dans le cadre d’un projet de fin d’études pour suivre le contrôle de qualité de la gamma caméra.
+# Initialisation états toggle dans session_state
+sections = ["gestion_intervenants", "controle_qualite", "suivi_pannes", "pieces_detachees", "gestion_documents", "rappels_controles"]
+for sec in sections:
+    if sec not in st.session_state:
+        st.session_state[sec] = False
 
-    ☢️ Radioprotection | ⚛️ Imagerie nucléaire | 🧪 Suivi qualité
-    """)
+def toggle_button(label, key):
+    if st.button(label, key=key):
+        st.session_state[key] = not st.session_state[key]
 
-# Section Utilisateurs
-with st.expander("👥 Gestion des intervenants"):
+def section_container(key, label, content_function):
+    st.markdown('<div class="section-container">', unsafe_allow_html=True)
+    toggle_button(label, key)
+    if st.session_state[key]:
+        content_function()
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Contenus des sections
+
+def contenu_gestion_intervenants():
     nom = st.text_input("Nom complet", key="nom_utilisateur")
     role = st.selectbox("Rôle", ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"], key="role_utilisateur")
     if st.button("Ajouter l'intervenant", key="btn_ajouter_utilisateur"):
@@ -163,8 +168,7 @@ with st.expander("👥 Gestion des intervenants"):
     df_users = pd.read_sql("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
     st.dataframe(df_users)
 
-# Section Contrôles qualité
-with st.expander("📅 Suivi des contrôles de qualité"):
+def contenu_controle_qualite():
     intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
     if intervenants:
         date = st.date_input("Date du contrôle", value=datetime.now(), key="date_controle")
@@ -179,8 +183,7 @@ with st.expander("📅 Suivi des contrôles de qualité"):
     df_cq = pd.read_sql("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
     st.dataframe(df_cq)
 
-# Section Pannes
-with st.expander("🛠️ Suivi des pannes"):
+def contenu_suivi_pannes():
     intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
     date = st.date_input("Date panne", key="date_panne")
     desc = st.text_area("Description", key="desc_panne")
@@ -194,8 +197,7 @@ with st.expander("🛠️ Suivi des pannes"):
     df_pannes = pd.read_sql("SELECT * FROM pannes ORDER BY date DESC", conn)
     st.dataframe(df_pannes)
 
-# Section Pièces détachées
-with st.expander("🔧 Pièces détachées"):
+def contenu_pieces_detachees():
     nom_piece = st.text_input("Nom pièce", key="nom_piece")
     ref = st.text_input("Référence", key="ref_piece")
     date_cmd = st.date_input("Date commande", key="date_cmd_piece")
@@ -209,8 +211,7 @@ with st.expander("🔧 Pièces détachées"):
     df_pieces = pd.read_sql("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
     st.dataframe(df_pieces)
 
-# Section Documents
-with st.expander("📂 Gestion documentaire"):
+def contenu_gestion_documents():
     nom_doc = st.text_input("Nom du document", key="nom_doc")
     type_doc = st.selectbox("Type", ["Protocole", "Contrat", "Notice", "Rapport"], key="type_doc")
     fichier = st.file_uploader("Téléverser un fichier", key="file_uploader")
@@ -222,23 +223,7 @@ with st.expander("📂 Gestion documentaire"):
     df_docs = pd.read_sql("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
     st.dataframe(df_docs)
 
-# Section Analyse
-with st.expander("📊 Analyse"):
-    df_cq = pd.read_sql("SELECT * FROM controle_qualite", conn)
-    if not df_cq.empty:
-        fig1 = px.histogram(df_cq, x="type", color="type", title="Nombre de contrôles par type")
-        st.plotly_chart(fig1)
-
-    df_p = pd.read_sql("SELECT * FROM pannes", conn)
-    if not df_p.empty:
-        df_p['date'] = pd.to_datetime(df_p['date'])
-        grouped = df_p.groupby(df_p['date'].dt.to_period("M")).size().reset_index(name="Nombre")
-        grouped['date'] = grouped['date'].astype(str)
-        fig2 = px.bar(grouped, x="date", y="Nombre", title="Pannes par mois")
-        st.plotly_chart(fig2)
-
-# Section Rappels
-with st.expander("🔔 Rappels des contrôles"):
+def contenu_rappels_controles():
     df = pd.read_sql("SELECT * FROM controle_qualite", conn)
     today = datetime.now().date()
     df['date'] = pd.to_datetime(df['date']).dt.date
@@ -264,3 +249,11 @@ with st.expander("🔔 Rappels des contrôles"):
             st.success("E-mail envoyé")
         else:
             st.error("Erreur lors de l'envoi")
+
+# Affichage des sections avec toggle
+section_container("gestion_intervenants", "👥 Gestion des intervenants", contenu_gestion_intervenants)
+section_container("controle_qualite", "📅 Suivi des contrôles de qualité", contenu_controle_qualite)
+section_container("suivi_pannes", "🛠️ Suivi des pannes", contenu_suivi_pannes)
+section_container("pieces_detachees", "🔧 Pièces détachées", contenu_pieces_detachees)
+section_container("gestion_documents", "📂 Gestion documentaire", contenu_gestion_documents)
+section_container("rappels_controles", "🔔 Rappels des contrôles", contenu_rappels_controles)
