@@ -147,7 +147,7 @@ st.markdown("""
 st.set_page_config(layout="wide")
 st.markdown("""
 <div class="banner">
-    <img src="https://cdn.openai.com/chatgpt/medical_banner.jpg" alt="banner" />
+    <img src="https://img.freepik.com/premium-photo/chemical-molecule-with-blue-background-3d-rendering_772449-4288.jpg" alt="banner" />
     <div class="banner-text">Bienvenue dans l'interface de gestion - Gamma Caméra</div>
 </div>
 """, unsafe_allow_html=True)
