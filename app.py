@@ -123,7 +123,7 @@ st.markdown("""
         background-position: center;
     }
     .section-container-gestion_intervenants {
-        background-image: url('https://cdn-icons-png.flaticon.com/512/3135/3135715.png');
+        background-image: url('https://img.freepik.com/premium-photo/chemical-molecule-with-blue-background-3d-rendering_772449-4288.jpg');
     }
     .section-container-controle_qualite {
         background-image: url('https://cdn-icons-png.flaticon.com/512/889/889392.png');
