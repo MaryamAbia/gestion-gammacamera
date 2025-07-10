@@ -76,7 +76,7 @@ st.markdown("""
     .banner {
         position: relative;
         width: 100%;
-        height: 250px;
+        height: 500px;
         background-image: url('https://cdn.openai.com/chatgpt/medical_banner.jpg');
         background-size: cover;
         background-position: center;
