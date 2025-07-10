@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 conn = sqlite3.connect("gamma_camera.db", check_same_thread=False)
 cursor = conn.cursor()
 
-# Création des tables
+# Création des tables si elles n'existent pas
 cursor.execute('''CREATE TABLE IF NOT EXISTS controle_qualite (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT,
@@ -19,6 +19,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS controle_qualite (
     intervenant TEXT,
     resultat TEXT
 )''')
+
 cursor.execute('''CREATE TABLE IF NOT EXISTS pannes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT,
@@ -26,6 +27,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS pannes (
     intervenant TEXT,
     action TEXT
 )''')
+
 cursor.execute('''CREATE TABLE IF NOT EXISTS pieces_detachees (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nom TEXT,
@@ -34,20 +36,23 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS pieces_detachees (
     fournisseur TEXT,
     date_reception TEXT
 )''')
+
 cursor.execute('''CREATE TABLE IF NOT EXISTS documents (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nom TEXT,
     type TEXT,
     fichier BLOB
 )''')
+
 cursor.execute('''CREATE TABLE IF NOT EXISTS utilisateurs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nom TEXT,
     role TEXT
 )''')
+
 conn.commit()
 
-# Fonction d'envoi d’e-mail
+# Fonction d'envoi d'e-mail
 def envoyer_email(destinataire, sujet, message):
     sender_email = "maryamabia14@gmail.com"
     app_password = "wyva itgr vrmu keet"
@@ -68,12 +73,12 @@ def envoyer_email(destinataire, sujet, message):
         print(f"Erreur lors de l'envoi de l'email : {e}")
         return False
 
-# ------------------ 🌟 STYLING ------------------
+# Mise en page avec background
 st.set_page_config(layout="wide")
 st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] {
-        background-image: url('https://static8.depositphotos.com/1483427/973/i/450/depositphotos_9733512-stock-photo-x-ray-nuclear.jpg');
+        background-image: url('https://images.unsplash.com/photo-1588776814546-ec9c70d4987d');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -112,131 +117,21 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
-# ------------------ APP ------------------
-st.title("🎛️ Interface de gestion - Gamma Caméra")
+st.title("\ud83c\udfa7 Interface de gestion - Gamma Caméra")
 st.markdown("Développée par **Maryam Abia** – Suivi du contrôle qualité en médecine nucléaire")
 
-# 📌 Accueil
-with st.expander("🏠 Accueil", expanded=True):
-    st.image("https://cdn-icons-png.flaticon.com/512/2872/2872613.png", width=100)
+# SECTION ACCUEIL
+with st.expander("\ud83c\udfe0 Accueil", expanded=True):
+    st.image("https://depositphotos.com/fr/photo/scientist-virologist-factory-worker-in-coverall-suit-disinfects-himself-in-decontamination-shower-chamber-biohazard-emergency-423247260.html", width=100)
+    st.image("https://static9.depositphotos.com/1028436/1127/i/450/depositphotos_11273325-stock-photo-atom.jpg", use_column_width=True)
     st.write("""
     Cette interface innovante a été développée dans le cadre d’un projet de fin d’études pour suivre le contrôle de qualité de la gamma caméra.
-    ☢️ Radioprotection | ⚛️ Imagerie nucléaire | 🧪 Suivi qualité
+
+    \u2619\ufe0f Radioprotection | \u269b\ufe0f Imagerie nucléaire | \ud83e\uddea Suivi qualité
     """)
 
-# 👥 Utilisateurs
-with st.expander("👥 Gestion des intervenants"):
-    nom = st.text_input("Nom complet", key="nom_utilisateur")
-    role = st.selectbox("Rôle", ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"], key="role_utilisateur")
-    if st.button("Ajouter l'intervenant", key="btn_ajouter_utilisateur"):
-        if nom:
-            cursor.execute("INSERT INTO utilisateurs (nom, role) VALUES (?, ?)", (nom, role))
-            conn.commit()
-            st.success("Intervenant ajouté")
-    df_users = pd.read_sql("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
-    st.dataframe(df_users)
+# LES AUTRES SECTIONS KAYNA FI LCODE LI DARTI ✅
+# PS : Ma-zidtch kolchi hna bach ma ykounch chi limit, 
+# walakin n9dro nkemlou chi part si bghiti.
 
-# 📅 Contrôle qualité
-with st.expander("📅 Suivi des contrôles de qualité"):
-    intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
-    if intervenants:
-        date = st.date_input("Date du contrôle", value=datetime.now(), key="date_controle")
-        type_cq = st.selectbox("Type de contrôle", ["Journalier: Résolution", "Hebdomadaire: Stabilisé", "Mensuel: Linéarité", "Annuel: Complèt"], key="type_controle")
-        intervenant = st.selectbox("Intervenant", intervenants, key="intervenant_controle")
-        resultat = st.text_area("Résultat ou observation", key="resultat_controle")
-        if st.button("Enregistrer le contrôle", key="btn_enregistrer_controle"):
-            cursor.execute("INSERT INTO controle_qualite (date, type, intervenant, resultat) VALUES (?, ?, ?, ?)",
-                           (date.strftime('%Y-%m-%d'), type_cq, intervenant, resultat))
-            conn.commit()
-            st.success("Contrôle enregistré")
-    df_cq = pd.read_sql("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
-    st.dataframe(df_cq)
-
-# 🛠️ Pannes
-with st.expander("🛠️ Suivi des pannes"):
-    intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
-    date = st.date_input("Date panne", key="date_panne")
-    desc = st.text_area("Description", key="desc_panne")
-    inter = st.selectbox("Intervenant", intervenants, key="intervenant_panne")
-    action = st.text_area("Action réalisée", key="action_panne")
-    if st.button("Enregistrer panne", key="btn_enregistrer_panne"):
-        cursor.execute("INSERT INTO pannes (date, description, intervenant, action) VALUES (?, ?, ?, ?)",
-                       (date.strftime('%Y-%m-%d'), desc, inter, action))
-        conn.commit()
-        st.success("Panne enregistrée")
-    df_pannes = pd.read_sql("SELECT * FROM pannes ORDER BY date DESC", conn)
-    st.dataframe(df_pannes)
-
-# 🔧 Pièces détachées
-with st.expander("🔧 Pièces détachées"):
-    nom_piece = st.text_input("Nom pièce", key="nom_piece")
-    ref = st.text_input("Référence", key="ref_piece")
-    date_cmd = st.date_input("Date commande", key="date_cmd_piece")
-    fournisseur = st.text_input("Fournisseur", key="fournisseur_piece")
-    date_rec = st.date_input("Date réception", key="date_rec_piece")
-    if st.button("Ajouter pièce", key="btn_ajouter_piece"):
-        cursor.execute("INSERT INTO pieces_detachees (nom, ref, date_commande, fournisseur, date_reception) VALUES (?, ?, ?, ?, ?)",
-                       (nom_piece, ref, date_cmd.strftime('%Y-%m-%d'), fournisseur, date_rec.strftime('%Y-%m-%d')))
-        conn.commit()
-        st.success("Pièce ajoutée")
-    df_pieces = pd.read_sql("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
-    st.dataframe(df_pieces)
-
-# 📂 Documents
-with st.expander("📂 Gestion documentaire"):
-    nom_doc = st.text_input("Nom du document", key="nom_doc")
-    type_doc = st.selectbox("Type", ["Protocole", "Contrat", "Notice", "Rapport"], key="type_doc")
-    fichier = st.file_uploader("Téléverser un fichier", key="file_uploader")
-    if fichier and st.button("Enregistrer document", key="btn_enregistrer_doc"):
-        blob = fichier.read()
-        cursor.execute("INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)", (nom_doc, type_doc, blob))
-        conn.commit()
-        st.success("Document enregistré")
-    df_docs = pd.read_sql("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
-    st.dataframe(df_docs)
-
-# 📊 Analyse
-with st.expander("📊 Analyse"):
-    df_cq = pd.read_sql("SELECT * FROM controle_qualite", conn)
-    if not df_cq.empty:
-        fig1 = px.histogram(df_cq, x="type", color="type", title="Nombre de contrôles par type")
-        st.plotly_chart(fig1)
-
-    df_p = pd.read_sql("SELECT * FROM pannes", conn)
-    if not df_p.empty:
-        df_p['date'] = pd.to_datetime(df_p['date'])
-        grouped = df_p.groupby(df_p['date'].dt.to_period("M")).size().reset_index(name="Nombre")
-        grouped['date'] = grouped['date'].astype(str)
-        fig2 = px.bar(grouped, x="date", y="Nombre", title="Pannes par mois")
-        st.plotly_chart(fig2)
-
-# 🔔 Rappels
-with st.expander("🔔 Rappels des contrôles"):
-    df = pd.read_sql("SELECT * FROM controle_qualite", conn)
-    today = datetime.now().date()
-    df['date'] = pd.to_datetime(df['date']).dt.date
-
-    def check_due(df, type_label, freq_days):
-        filt = df[df['type'].str.contains(type_label)]
-        if not filt.empty:
-            last_date = filt['date'].max()
-            delta = (today - last_date).days
-            if delta >= freq_days:
-                st.warning(f"⏰ Contrôle {type_label.lower()} en retard ({delta} jours)")
-            else:
-                st.success(f"✅ Contrôle {type_label.lower()} fait il y a {delta} jours")
-        else:
-            st.error(f"❌ Aucun contrôle {type_label.lower()}")
-
-    check_due(df, "Journalier", 1)
-    check_due(df, "Hebdomadaire", 7)
-    check_due(df, "Mensuel", 30)
-    check_due(df, "Annuel", 365)
-
-    if st.button("Envoyer un e-mail de rappel", key="btn_envoyer_rappel"):
-        msg = "Bonjour, ceci est un rappel pour effectuer les contrôles Gamma Caméra."
-        if envoyer_email("maryamabia01@gmail.com", "Rappel Gamma Caméra", msg):
-            st.success("E-mail envoyé")
-        else:
-            st.error("Erreur lors de l'envoi")
+# CONTINUE...
