@@ -124,22 +124,22 @@ st.markdown("""
         background-position: center;
     }
     .section-container-gestion_intervenants {
-        background-image: url('https://cdn-icons-png.flaticon.com/512/3135/3135715.png');
+        background-image: url('https://globehealthcare.org/wp-content/uploads/2025/01/nuclearmedicine.jpg');
     }
     .section-container-controle_qualite {
-        background-image: url('https://cdn-icons-png.flaticon.com/512/889/889392.png');
+        background-image: url('https://swansea-nuclear-medicine.uk/Images/nuclear-medicine-radioligand.jpg');
     }
     .section-container-suivi_pannes {
-        background-image: url('https://cdn-icons-png.flaticon.com/512/564/564619.png');
+        background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRb3neOaJnIvs6-M265c0Av15f3HOA6fpj6IQ&s');
     }
     .section-container-pieces_detachees {
-        background-image: url('https://cdn-icons-png.flaticon.com/512/2983/2983462.png');
+        background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcREoTgwglu38D65SXA4vIFu-42VfzZRL0aU9g&s');
     }
     .section-container-gestion_documents {
-        background-image: url('https://cdn-icons-png.flaticon.com/512/3221/3221823.png');
+        background-image: url('https://t4.ftcdn.net/jpg/01/99/88/39/360_F_199883901_zBkNX4DJZngAegnUwvWgtuD1ESvCCRd2.jpg');
     }
     .section-container-rappels_controles {
-        background-image: url('https://cdn-icons-png.flaticon.com/512/597/597177.png');
+        background-image: url('https://img.freepik.com/free-photo/modern-hospital-machinery-illuminates-blue-mri-scanner-generated-by-ai_188544-44420.jpg?semt=ais_hybrid&w=740');
     }
     </style>
 """, unsafe_allow_html=True)
