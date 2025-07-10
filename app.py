@@ -66,12 +66,40 @@ def envoyer_email(destinataire, sujet, message):
         st.error(f"Erreur email : {e}")
         return False
 
-# CSS pour chaque section avec image
+# CSS
 st.markdown("""
     <style>
     .stApp {
         background-color: #f7f7f7;
         font-family: 'Segoe UI', sans-serif;
+    }
+    .banner {
+        position: relative;
+        width: 100%;
+        height: 250px;
+        background-image: url('https://cdn.openai.com/chatgpt/medical_banner.jpg');
+        background-size: cover;
+        background-position: center;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+    .banner-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 20px 40px;
+        border-radius: 10px;
+        color: #1f005c;
+        text-align: center;
+        font-size: 30px;
+        font-weight: bold;
+        animation: fadeIn 2s ease-in-out;
+    }
+    @keyframes fadeIn {
+        from {opacity: 0; transform: translate(-50%, -60%);}
+        to {opacity: 1; transform: translate(-50%, -50%);}
     }
     .section-container {
         border-radius: 15px;
@@ -79,13 +107,13 @@ st.markdown("""
         margin-bottom: 30px;
         box-shadow: 0 8px 24px rgba(0,0,0,0.1);
         color: black;
-        background-color: rgba(255, 255, 255, 0.75);
+        background-color: rgba(255, 255, 255, 0.85);
         background-repeat: no-repeat;
         background-size: cover;
         background-position: center;
     }
     .section-container-gestion_intervenants {
-        background-image: url('https://img.freepik.com/premium-photo/clear-nuclear-medicine-image-showing-distribution-radiotracer-within-body-highlighting-areas-high-uptake-set-specialized-imaging-center-with-advanced-technology_1282204-2411.jpg');
+        background-image: url('https://cdn-icons-png.flaticon.com/512/3135/3135715.png');
     }
     .section-container-controle_qualite {
         background-image: url('https://cdn-icons-png.flaticon.com/512/889/889392.png');
@@ -106,10 +134,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.set_page_config(layout="wide")
-st.title("Interface de gestion - Gamma Caméra")
+st.markdown('<div class="banner"><div class="banner-text">Bienvenue dans l'interface de gestion - Gamma Caméra</div></div>', unsafe_allow_html=True)
 st.markdown("Développée par **Maryam Abia**")
 
-# Fonction générique pour section avec image
+# Fonction générique pour section
 
 def section_container(key, label, content_func):
     css = f"section-container section-container-{key}"
