@@ -85,7 +85,7 @@ st.markdown("""
         background-position: right bottom;
     }
     .section-container-gestion_intervenants {
-        background-image: url('https://cdn-icons-png.flaticon.com/512/3135/3135715.png');
+        background-image: url('https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.freepik.com%2Fpremium-ai-image%2Fclear-nuclear-medicine-image-showing-distribution-radiotracer-within-body-highlighting-areas-high-uptake-set-specialized-imaging-center-with-advanced-technology_267592288.htm&psig=AOvVaw3PUFKnqErHufCjgKvVPIc2&ust=1752248165456000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCJCW2J7Pso4DFQAAAAAdAAAAABAE');
     }
     .section-container-controle_qualite {
         background-image: url('https://cdn-icons-png.flaticon.com/512/889/889392.png');
