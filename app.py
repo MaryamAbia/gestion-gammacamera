@@ -55,7 +55,7 @@ conn.commit()
 # Fonction d'envoi d'e-mail
 def envoyer_email(destinataire, sujet, message):
     sender_email = "maryamabia14@gmail.com"
-    app_password = "wyva itgr vrmu keet"  # ATTENTION: Mets ton vrai mot de passe d'application ici
+    app_password = "wyva itgr vrmu keet"  # Remplace par ton vrai mot de passe d'application
 
     msg = MIMEMultipart()
     msg["From"] = sender_email
@@ -73,16 +73,16 @@ def envoyer_email(destinataire, sujet, message):
         st.error(f"Erreur lors de l'envoi de l'email : {e}")
         return False
 
-# CSS - Background app + styles sections + boutons
+# CSS pour style + background image
 st.markdown("""
 <style>
 .stApp {
-    background-image: url('https://st2.depositphotos.com/2890953/5471/i/600/depositphotos_54710477-stock-illustration-science-atom-globe-with-orbits.jpg');
+    background-image: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    background-attachment: fixed;
-    color: black;
+    /* background-attachment: fixed; */ /* Retirer pour mobile */
+    color: white;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -98,24 +98,8 @@ st.markdown("""
 h2.section-title {
     color: #4b007a;
     margin-bottom: 10px;
-}
-
-button.section-toggle {
-    background-color: #5b2a86;
-    color: black;
-    border-radius: 8px;
-    padding: 8px 20px;
-    border: none;
     font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 15px;
-    transition: background-color 0.3s ease;
-    width: 100%;
-    text-align: left;
-    font-size: 18px;
-}
-button.section-toggle:hover {
-    background-color: #7d4ba6;
+    font-size: 22px;
 }
 
 input, select, textarea {
@@ -138,30 +122,39 @@ st.set_page_config(layout="wide")
 st.title("Interface de gestion - Gamma Caméra")
 st.markdown("Développée par **Maryam Abia** – Suivi du contrôle qualité en médecine nucléaire")
 
-# Initialisation états toggle dans session_state
-sections = ["gestion_intervenants", "controle_qualite", "suivi_pannes", "pieces_detachees", "gestion_documents", "rappels_controles"]
+# Initialiser états des sections (si غير موجودين)
+sections = [
+    "gestion_intervenants",
+    "controle_qualite",
+    "suivi_pannes",
+    "pieces_detachees",
+    "gestion_documents",
+    "rappels_controles"
+]
+
 for sec in sections:
     if sec not in st.session_state:
         st.session_state[sec] = False
 
-def toggle_button(label, key):
-    if st.button(label, key=key):
-        st.session_state[key] = not st.session_state[key]
-
-def section_container(key, label, content_function):
+# Fonction pour afficher section avec checkbox toggle
+def section_container_checkbox(key, label, content_function):
     st.markdown('<div class="section-container">', unsafe_allow_html=True)
-    toggle_button(label, key)
-    if st.session_state[key]:
+    show = st.checkbox(label, value=st.session_state[key], key=f"chk_{key}")
+    st.session_state[key] = show
+    if show:
         content_function()
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Contenus des sections
 
 def contenu_gestion_intervenants():
+    st.header("👥 Gestion des intervenants")
     nom = st.text_input("Nom complet", key="nom_utilisateur")
     role = st.selectbox("Rôle", ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"], key="role_utilisateur")
     if st.button("Ajouter l'intervenant", key="btn_ajouter_utilisateur"):
-        if nom:
+        if nom.strip() == "":
+            st.warning("Veuillez saisir un nom.")
+        else:
             cursor.execute("INSERT INTO utilisateurs (nom, role) VALUES (?, ?)", (nom, role))
             conn.commit()
             st.success("Intervenant ajouté")
@@ -169,22 +162,29 @@ def contenu_gestion_intervenants():
     st.dataframe(df_users)
 
 def contenu_controle_qualite():
+    st.header("📅 Suivi des contrôles de qualité")
     intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
-    if intervenants:
-        date = st.date_input("Date du contrôle", value=datetime.now(), key="date_controle")
-        type_cq = st.selectbox("Type de contrôle", ["Journalier: Résolution", "Hebdomadaire: Stabilisé", "Mensuel: Linéarité", "Annuel: Complèt"], key="type_controle")
-        intervenant = st.selectbox("Intervenant", intervenants, key="intervenant_controle")
-        resultat = st.text_area("Résultat ou observation", key="resultat_controle")
-        if st.button("Enregistrer le contrôle", key="btn_enregistrer_controle"):
-            cursor.execute("INSERT INTO controle_qualite (date, type, intervenant, resultat) VALUES (?, ?, ?, ?)",
-                           (date.strftime('%Y-%m-%d'), type_cq, intervenant, resultat))
-            conn.commit()
-            st.success("Contrôle enregistré")
+    if not intervenants:
+        st.warning("Veuillez ajouter des intervenants d'abord.")
+        return
+    date = st.date_input("Date du contrôle", value=datetime.now(), key="date_controle")
+    type_cq = st.selectbox("Type de contrôle", ["Journalier: Résolution", "Hebdomadaire: Stabilisé", "Mensuel: Linéarité", "Annuel: Complèt"], key="type_controle")
+    intervenant = st.selectbox("Intervenant", intervenants, key="intervenant_controle")
+    resultat = st.text_area("Résultat ou observation", key="resultat_controle")
+    if st.button("Enregistrer le contrôle", key="btn_enregistrer_controle"):
+        cursor.execute("INSERT INTO controle_qualite (date, type, intervenant, resultat) VALUES (?, ?, ?, ?)",
+                       (date.strftime('%Y-%m-%d'), type_cq, intervenant, resultat))
+        conn.commit()
+        st.success("Contrôle enregistré")
     df_cq = pd.read_sql("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
     st.dataframe(df_cq)
 
 def contenu_suivi_pannes():
+    st.header("🛠️ Suivi des pannes")
     intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
+    if not intervenants:
+        st.warning("Veuillez ajouter des intervenants d'abord.")
+        return
     date = st.date_input("Date panne", key="date_panne")
     desc = st.text_area("Description", key="desc_panne")
     inter = st.selectbox("Intervenant", intervenants, key="intervenant_panne")
@@ -198,6 +198,7 @@ def contenu_suivi_pannes():
     st.dataframe(df_pannes)
 
 def contenu_pieces_detachees():
+    st.header("🔧 Pièces détachées")
     nom_piece = st.text_input("Nom pièce", key="nom_piece")
     ref = st.text_input("Référence", key="ref_piece")
     date_cmd = st.date_input("Date commande", key="date_cmd_piece")
@@ -212,6 +213,7 @@ def contenu_pieces_detachees():
     st.dataframe(df_pieces)
 
 def contenu_gestion_documents():
+    st.header("📂 Gestion documentaire")
     nom_doc = st.text_input("Nom du document", key="nom_doc")
     type_doc = st.selectbox("Type", ["Protocole", "Contrat", "Notice", "Rapport"], key="type_doc")
     fichier = st.file_uploader("Téléverser un fichier", key="file_uploader")
@@ -224,7 +226,11 @@ def contenu_gestion_documents():
     st.dataframe(df_docs)
 
 def contenu_rappels_controles():
+    st.header("🔔 Rappels des contrôles")
     df = pd.read_sql("SELECT * FROM controle_qualite", conn)
+    if df.empty:
+        st.info("Aucun contrôle qualité enregistré.")
+        return
     today = datetime.now().date()
     df['date'] = pd.to_datetime(df['date']).dt.date
     def check_due(df, type_label, freq_days):
@@ -250,10 +256,10 @@ def contenu_rappels_controles():
         else:
             st.error("Erreur lors de l'envoi")
 
-# Affichage des sections avec toggle
-section_container("gestion_intervenants", "👥 Gestion des intervenants", contenu_gestion_intervenants)
-section_container("controle_qualite", "📅 Suivi des contrôles de qualité", contenu_controle_qualite)
-section_container("suivi_pannes", "🛠️ Suivi des pannes", contenu_suivi_pannes)
-section_container("pieces_detachees", "🔧 Pièces détachées", contenu_pieces_detachees)
-section_container("gestion_documents", "📂 Gestion documentaire", contenu_gestion_documents)
-section_container("rappels_controles", "🔔 Rappels des contrôles", contenu_rappels_controles)
+# Affichage des sections
+section_container_checkbox("gestion_intervenants", "👥 Gestion des intervenants", contenu_gestion_intervenants)
+section_container_checkbox("controle_qualite", "📅 Suivi des contrôles de qualité", contenu_controle_qualite)
+section_container_checkbox("suivi_pannes", "🛠️ Suivi des pannes", contenu_suivi_pannes)
+section_container_checkbox("pieces_detachees", "🔧 Pièces détachées", contenu_pieces_detachees)
+section_container_checkbox("gestion_documents", "📂 Gestion documentaire", contenu_gestion_documents)
+section_container_checkbox("rappels_controles", "🔔 Rappels des contrôles", contenu_rappels_controles)
