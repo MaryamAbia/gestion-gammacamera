@@ -78,19 +78,21 @@ st.markdown("""
         background-position: center;
         background-repeat: no-repeat;
     }
+
     [data-testid="stHeader"] {
         background: transparent;
     }
+
     .block-container {
-        background-color: rgba(255, 255, 255, 0.95);
         padding: 2rem;
-        border-radius: 16px;
-        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
-        margin-top: 20px;
+        margin-top: 10px;
+        color: white;
     }
+
     h1, h2, h3 {
-        color: #1f005c;
+        color: #ffffff;
     }
+
     div.stButton > button {
         background-color: #5b2a86;
         color: white;
@@ -99,11 +101,17 @@ st.markdown("""
         font-weight: bold;
         border: none;
     }
+
     div.stButton > button:hover {
         background-color: #3e1c62;
     }
+
+    .stSelectbox label, .stTextInput label, .stTextArea label {
+        color: #ffffff;
+    }
     </style>
 """, unsafe_allow_html=True)
+
 
 # ------------------ APP ------------------
 st.title("🎛️ Interface de gestion - Gamma Caméra")
