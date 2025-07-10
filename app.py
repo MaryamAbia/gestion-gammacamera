@@ -6,50 +6,26 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# Connexion base de données
+# Configuration de la page
+st.set_page_config(layout="wide", page_title="Gestion Gamma Caméra", page_icon="🧪")
+
+# Connexion à la base de données
 conn = sqlite3.connect("gamma_camera.db", check_same_thread=False)
 cursor = conn.cursor()
 
-# Création des tables
-cursor.execute('''CREATE TABLE IF NOT EXISTS controle_qualite (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT,
-    type TEXT,
-    intervenant TEXT,
-    resultat TEXT
-)''')
-cursor.execute('''CREATE TABLE IF NOT EXISTS pannes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT,
-    description TEXT,
-    intervenant TEXT,
-    action TEXT
-)''')
-cursor.execute('''CREATE TABLE IF NOT EXISTS pieces_detachees (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT,
-    ref TEXT,
-    date_commande TEXT,
-    fournisseur TEXT,
-    date_reception TEXT
-)''')
-cursor.execute('''CREATE TABLE IF NOT EXISTS documents (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT,
-    type TEXT,
-    fichier BLOB
-)''')
-cursor.execute('''CREATE TABLE IF NOT EXISTS utilisateurs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT,
-    role TEXT
-)''')
+# Création des tables si non existantes
+cursor.execute('''CREATE TABLE IF NOT EXISTS utilisateurs (id INTEGER PRIMARY KEY, nom TEXT, role TEXT)''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS controle_qualite (id INTEGER PRIMARY KEY, date TEXT, type TEXT, intervenant TEXT, resultat TEXT)''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS pannes (id INTEGER PRIMARY KEY, date TEXT, description TEXT, intervenant TEXT, action TEXT)''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS pieces_detachees (id INTEGER PRIMARY KEY, nom TEXT, ref TEXT, date_commande TEXT, fournisseur TEXT, date_reception TEXT)''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS documents (id INTEGER PRIMARY KEY, nom TEXT, type TEXT, fichier BLOB)''')
 conn.commit()
 
-# Fonction d'envoi d'email
+# Email
+
 def envoyer_email(destinataire, sujet, message):
     sender_email = "maryamabia14@gmail.com"
-    app_password = "wyva itgr vrmu keet"
+    app_password = "your_app_password_here"
     msg = MIMEMultipart()
     msg["From"] = sender_email
     msg["To"] = destinataire
@@ -65,214 +41,152 @@ def envoyer_email(destinataire, sujet, message):
         st.error(f"Erreur email : {e}")
         return False
 
-# Configuration Streamlit
-st.set_page_config(layout="wide")
-
-# CSS avec hauteur grande pour chaque section
+# CSS Custom pour dark mode + animation
 st.markdown("""
     <style>
+    body {
+        background-color: #121212;
+        color: #f0f0f0;
+    }
     .stApp {
-        background-color: #f4f4f4;
+        background-color: #121212;
+        color: #f0f0f0;
         font-family: 'Segoe UI', sans-serif;
     }
-
-    .banner {
-        position: relative;
-        width: 100%;
-        height: 300px;
-        background-color: white;
-        border-radius: 12px;
-        margin-bottom: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .section {
+        padding: 80px 40px;
+        margin-bottom: 60px;
+        border-radius: 24px;
+        background-size: cover;
+        background-position: center;
+        color: white;
+        box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+        animation: fadeInUp 1.2s ease-in-out;
     }
-
-    .banner img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 12px;
-        position: absolute;
-        top: 0;
-        left: 0;
-        z-index: 0;
-    }
-
-    .banner-text {
-        position: relative;
-        z-index: 1;
-        background-color: rgba(255, 255, 255, 0.85);
-        padding: 25px 50px;
-        border-radius: 12px;
-        color: #1f005c;
+    .title {
         text-align: center;
-        font-size: 36px;
-        font-weight: bold;
+        font-size: 42px;
+        margin-bottom: 40px;
+        text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
         animation: fadeIn 2s ease-in-out;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-
-    @keyframes fadeIn {
-        from {opacity: 0; transform: translateY(-10px);}
+    @keyframes fadeInUp {
+        from {opacity: 0; transform: translateY(30px);}
         to {opacity: 1; transform: translateY(0);}
     }
-
-    .section-container {
-        min-height: 1000px;  /* TALL HEIGHT */
-        border-radius: 24px;
-        padding: 80px 60px;
-        margin-bottom: 100px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        background-color: rgba(255, 255, 255, 0.90);
-        background-repeat: no-repeat;
-        background-size: cover;
-        background-position: center center;
-    }
-
-    .section-container h2 {
-        text-align: center;
-        font-size: 40px;
-        font-weight: bold;
-        color: #003366;
-        margin-bottom: 40px;
-        text-shadow: 1px 1px 2px white;
-    }
-
-    .section-container-gestion_intervenants {
-        background-image: url('https://www.shutterstock.com/shutterstock/videos/1106443939/thumb/1.jpg?ip=x1080');
-    }
-    .section-container-controle_qualite {
-        background-image: url('https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg');
-    }
-    .section-container-suivi_pannes {
-        background-image: url('https://st.depositphotos.com/1471096/58879/i/450/depositphotos_588797742-stock-photo-rendering-cryptocurrency-proton-coin-colorful.jpg');
-    }
-    .section-container-pieces_detachees {
-        background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcREoTgwglu38D65SXA4vIFu-42VfzZRL0aU9g&s');
-    }
-    .section-container-gestion_documents {
-        background-image: url('https://t4.ftcdn.net/jpg/01/99/88/39/360_F_199883901_zBkNX4DJZngAegnUwvWgtuD1ESvCCRd2.jpg');
-    }
-    .section-container-rappels_controles {
-        background-image: url('https://img.freepik.com/free-photo/modern-hospital-machinery-illuminates-blue-mri-scanner-generated-by-ai_188544-44420.jpg?semt=ais_hybrid&w=740');
+    @keyframes fadeIn {
+        from {opacity: 0;}
+        to {opacity: 1;}
     }
     </style>
 """, unsafe_allow_html=True)
 
-# Bannière
-st.markdown("""
-<div class="banner">
-    <img src="https://img.freepik.com/premium-photo/chemical-molecule-with-blue-background-3d-rendering_772449-4288.jpg" alt="banner" />
-    <div class="banner-text">Bienvenue dans l'interface de gestion - Gamma Caméra</div>
-</div>
-""", unsafe_allow_html=True)
-st.markdown("Développée par **Maryam Abia**")
+# Section helper
 
-# Fonctions des blocs de contenu
-def contenu_gestion_intervenants():
+def section(title, bg_url, func):
+    st.markdown(f"""
+        <div class=\"section\" style=\"background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{bg_url}');\">
+        <div class=\"title\">{title}</div>
+    """, unsafe_allow_html=True)
+    func()
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# Fonctions de contenu des sections
+
+def gestion_utilisateurs():
     nom = st.text_input("Nom complet")
-    role = st.selectbox("Rôle", ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"])
-    if st.button("Ajouter l'intervenant"):
+    role = st.selectbox("Rôle", ["Technicien", "Médecin", "Ingénieur", "Autre"])
+    if st.button("Ajouter"):
         if nom:
             cursor.execute("INSERT INTO utilisateurs (nom, role) VALUES (?, ?)", (nom, role))
             conn.commit()
-            st.success("Intervenant ajouté")
-    df = pd.read_sql("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
+            st.success("Ajouté")
+    df = pd.read_sql("SELECT * FROM utilisateurs", conn)
     st.dataframe(df)
 
-def contenu_controle_qualite():
-    intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
-    if intervenants:
+def suivi_qualite():
+    users = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
+    if users:
         date = st.date_input("Date", value=datetime.now())
-        type_cq = st.selectbox("Type", ["Journalier: Résolution", "Hebdomadaire: Stabilisé", "Mensuel: Linéarité", "Annuel: Complèt"])
-        intervenant = st.selectbox("Intervenant", intervenants)
-        resultat = st.text_area("Résultat")
-        if st.button("Enregistrer"):
+        type_cq = st.selectbox("Type", ["Journalier", "Hebdomadaire", "Mensuel", "Annuel"])
+        user = st.selectbox("Intervenant", users)
+        result = st.text_area("Résultat")
+        if st.button("Enregistrer contrôle"):
             cursor.execute("INSERT INTO controle_qualite (date, type, intervenant, resultat) VALUES (?, ?, ?, ?)",
-                           (date.strftime('%Y-%m-%d'), type_cq, intervenant, resultat))
+                           (date.strftime('%Y-%m-%d'), type_cq, user, result))
             conn.commit()
             st.success("Contrôle enregistré")
-    df = pd.read_sql("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
+    df = pd.read_sql("SELECT * FROM controle_qualite", conn)
     st.dataframe(df)
 
-def contenu_suivi_pannes():
-    intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
-    date = st.date_input("Date de la panne")
+    # Rappel automatique
+    st.markdown("---")
+    st.subheader("🔔 Rappel de contrôle")
+    df['date'] = pd.to_datetime(df['date']).dt.date
+    today = datetime.now().date()
+    for label, days in {"Journalier": 1, "Hebdomadaire": 7, "Mensuel": 30, "Annuel": 365}.items():
+        filt = df[df['type'].str.contains(label)]
+        if not filt.empty:
+            delta = (today - max(filt['date'])).days
+            if delta >= days:
+                st.warning(f"❗ Contrôle {label.lower()} en retard depuis {delta} jours")
+            else:
+                st.success(f"✅ Contrôle {label.lower()} effectué il y a {delta} jours")
+        else:
+            st.error(f"❌ Aucun contrôle {label.lower()} enregistré")
+
+    if st.button("✉️ Envoyer rappel par e-mail"):
+        if envoyer_email("maryamabia01@gmail.com", "Rappel Gamma Caméra", "Merci de faire les contrôles qualité."):
+            st.success("E-mail envoyé")
+        else:
+            st.error("Erreur lors de l'envoi")
+
+def suivi_pannes():
+    users = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
+    date = st.date_input("Date")
     desc = st.text_area("Description")
-    inter = st.selectbox("Intervenant", intervenants)
+    user = st.selectbox("Intervenant", users)
     action = st.text_area("Action")
     if st.button("Enregistrer panne"):
         cursor.execute("INSERT INTO pannes (date, description, intervenant, action) VALUES (?, ?, ?, ?)",
-                       (date.strftime('%Y-%m-%d'), desc, inter, action))
+                       (date.strftime('%Y-%m-%d'), desc, user, action))
         conn.commit()
         st.success("Panne enregistrée")
-    df = pd.read_sql("SELECT * FROM pannes ORDER BY date DESC", conn)
+    df = pd.read_sql("SELECT * FROM pannes", conn)
     st.dataframe(df)
 
-def contenu_pieces_detachees():
-    nom = st.text_input("Nom de la pièce")
+def gestion_pieces():
+    nom = st.text_input("Nom pièce")
     ref = st.text_input("Référence")
-    date_cmd = st.date_input("Date de commande")
+    cmd = st.date_input("Date commande")
     fournisseur = st.text_input("Fournisseur")
-    date_rec = st.date_input("Date de réception")
+    rec = st.date_input("Date réception")
     if st.button("Ajouter pièce"):
         cursor.execute("INSERT INTO pieces_detachees (nom, ref, date_commande, fournisseur, date_reception) VALUES (?, ?, ?, ?, ?)",
-                       (nom, ref, date_cmd.strftime('%Y-%m-%d'), fournisseur, date_rec.strftime('%Y-%m-%d')))
+                       (nom, ref, cmd.strftime('%Y-%m-%d'), fournisseur, rec.strftime('%Y-%m-%d')))
         conn.commit()
-        st.success("Pièce ajoutée")
-    df = pd.read_sql("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
+        st.success("Pièce enregistrée")
+    df = pd.read_sql("SELECT * FROM pieces_detachees", conn)
     st.dataframe(df)
 
-def contenu_gestion_documents():
-    nom = st.text_input("Nom du document")
-    type_doc = st.selectbox("Type", ["Protocole", "Contrat", "Notice", "Rapport"])
+def gestion_docs():
+    nom = st.text_input("Nom document")
+    type_doc = st.selectbox("Type", ["Protocole", "Rapport", "Notice"])
     fichier = st.file_uploader("Fichier")
-    if fichier and st.button("Enregistrer document"):
-        blob = fichier.read()
-        cursor.execute("INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)", (nom, type_doc, blob))
+    if fichier and st.button("Enregistrer doc"):
+        cursor.execute("INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)",
+                       (nom, type_doc, fichier.read()))
         conn.commit()
         st.success("Document enregistré")
-    df = pd.read_sql("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
+    df = pd.read_sql("SELECT id, nom, type FROM documents", conn)
     st.dataframe(df)
 
-def contenu_rappels_controles():
-    df = pd.read_sql("SELECT * FROM controle_qualite", conn)
-    today = datetime.now().date()
-    df['date'] = pd.to_datetime(df['date']).dt.date
+# Affichage créatif par section
+section("👥 Gestion des intervenants", "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61", gestion_utilisateurs)
+section("📋 Suivi des contrôles qualité", "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158", suivi_qualite)
+section("🛠️ Suivi des pannes", "https://images.unsplash.com/photo-1581090700227-1ec7fa9a6a2e", suivi_pannes)
+section("🔧 Pièces détachées", "https://images.unsplash.com/photo-1581093588401-95f2dc9b5b91", gestion_pieces)
+section("📂 Gestion des documents", "https://images.unsplash.com/photo-1581092331458-3996a21b24b8", gestion_docs)
 
-    def check_due(df, label, freq):
-        f = df[df['type'].str.contains(label)]
-        if not f.empty:
-            delta = (today - f['date'].max()).days
-            if delta >= freq:
-                st.warning(f"⚠️ {label} en retard de {delta} jours")
-            else:
-                st.success(f"✅ {label} effectué il y a {delta} jours")
-        else:
-            st.error(f"❌ Aucun {label} trouvé")
-
-    check_due(df, "Journalier", 1)
-    check_due(df, "Hebdomadaire", 7)
-    check_due(df, "Mensuel", 30)
-    check_due(df, "Annuel", 365)
-
-    if st.button("Envoyer rappel"):
-        if envoyer_email("maryamabia01@gmail.com", "Rappel", "Merci de faire les contrôles qualité."):
-            st.success("Email envoyé")
-
-# Bloc général pour chaque section
-def section_container(key, label, content_func):
-    css_class = f"section-container section-container-{key}"
-    st.markdown(f'<div class="{css_class}">', unsafe_allow_html=True)
-    st.markdown(f"<h2>{label}</h2>", unsafe_allow_html=True)
-    content_func()
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# Appel des sections
-section_container("gestion_intervenants", "👥 Gestion des intervenants", contenu_gestion_intervenants)
-section_container("controle_qualite", "🧪 Suivi des contrôles", contenu_controle_qualite)
-section_container("suivi_pannes", "🛠️ Suivi des pannes", contenu_suivi_pannes)
-section_container("pieces_detachees", "🔧 Pièces détachées", contenu_pieces_detachees)
-section_container("gestion_documents", "📂 Gestion documentaire", contenu_gestion_documents)
-section_container("rappels_controles", "🔔 Rappels des contrôles", contenu_rappels_controles)
+st.markdown("""<hr style='border: none; height: 2px; background: #666; margin-top: 60px;'>
+<p style='text-align:center;'>Développée par <strong>Maryam Abia</strong></p>""", unsafe_allow_html=True)
