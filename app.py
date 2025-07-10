@@ -134,7 +134,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.set_page_config(layout="wide")
-st.markdown('<div class="banner"><div class="banner-text">Bienvenue dans l'interface de gestion - Gamma Caméra</div></div>', unsafe_allow_html=True)
+st.markdown("""
+<div class="banner">
+    <div class="banner-text">Bienvenue dans l'interface de gestion - Gamma Caméra</div>
+</div>
+""", unsafe_allow_html=True)
 st.markdown("Développée par **Maryam Abia**")
 
 # Fonction générique pour section
