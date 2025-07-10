@@ -130,7 +130,7 @@ st.markdown("""
         background-image: url('https://swansea-nuclear-medicine.uk/Images/nuclear-medicine-radioligand.jpg');
     }
     .section-container-suivi_pannes {
-        background-image: url('https://depositphotos.com/fr/photo/rendering-cryptocurrency-proton-coin-colorful-background-cryptocurrency-concept-illustration-588797742.html');
+        background-image: url('https://st.depositphotos.com/1471096/58879/i/450/depositphotos_588797742-stock-photo-rendering-cryptocurrency-proton-coin-colorful.jpg');
     }
     .section-container-pieces_detachees {
         background-image: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcREoTgwglu38D65SXA4vIFu-42VfzZRL0aU9g&s');
