@@ -9,6 +9,18 @@ from email.mime.multipart import MIMEMultipart
 # Configuration de la page
 st.set_page_config(layout="wide", page_title="Gestion Gamma Caméra", page_icon="🧪")
 
+# Message d'accueil animé
+st.markdown("""
+    <div style="text-align: center; padding: 60px 20px; background-color: #eaf4ff; border-radius: 12px; margin-bottom: 40px; animation: fadeIn 2s ease-in-out;">
+        <h1 style="color: #0a2c5e; font-size: 48px; margin-bottom: 20px;">Bienvenue dans l'interface de gestion de la qualité</h1>
+        <p style="font-size: 22px; color: #1a1a1a; max-width: 800px; margin: 0 auto;">
+            Cet espace a été conçu pour faciliter le suivi, la traçabilité et l'optimisation des activités liées à la gamma caméra
+            en médecine nucléaire. Vous pouvez gérer les intervenants, les contrôles de qualité, les pannes, la documentation
+            ainsi que les pièces détachées de manière intuitive et professionnelle.
+        </p>
+    </div>
+""", unsafe_allow_html=True)
+
 # Connexion à la base de données
 conn = sqlite3.connect("gamma_camera.db", check_same_thread=False)
 cursor = conn.cursor()
@@ -41,18 +53,9 @@ def envoyer_email(destinataire, sujet, message):
         st.error(f"Erreur email : {e}")
         return False
 
-# CSS Custom pour dark mode + animation
+# CSS
 st.markdown("""
     <style>
-    body {
-        background-color: #121212;
-        color: #f0f0f0;
-    }
-    .stApp {
-        background-color: #121212;
-        color: #f0f0f0;
-        font-family: 'Segoe UI', sans-serif;
-    }
     .section {
         padding: 80px 40px;
         margin-bottom: 60px;
@@ -60,14 +63,14 @@ st.markdown("""
         background-size: cover;
         background-position: center;
         color: white;
-        box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         animation: fadeInUp 1.2s ease-in-out;
     }
     .title {
         text-align: center;
         font-size: 42px;
         margin-bottom: 40px;
-        text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        text-shadow: 2px 2px 5px rgba(0,0,0,0.4);
         animation: fadeIn 2s ease-in-out;
     }
     @keyframes fadeInUp {
@@ -81,17 +84,17 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Section helper
+# Section Helper
 
 def section(title, bg_url, func):
     st.markdown(f"""
-        <div class=\"section\" style=\"background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{bg_url}');\">
-        <div class=\"title\">{title}</div>
+        <div class='section' style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('{bg_url}');">
+        <div class='title'>{title}</div>
     """, unsafe_allow_html=True)
     func()
     st.markdown("</div>", unsafe_allow_html=True)
 
-# Fonctions de contenu des sections
+# Fonctions des sections
 
 def gestion_utilisateurs():
     nom = st.text_input("Nom complet")
@@ -119,7 +122,6 @@ def suivi_qualite():
     df = pd.read_sql("SELECT * FROM controle_qualite", conn)
     st.dataframe(df)
 
-    # Rappel automatique
     st.markdown("---")
     st.subheader("🔔 Rappel de contrôle")
     df['date'] = pd.to_datetime(df['date']).dt.date
@@ -181,12 +183,19 @@ def gestion_docs():
     df = pd.read_sql("SELECT id, nom, type FROM documents", conn)
     st.dataframe(df)
 
-# Affichage créatif par section
-section("👥 Gestion des intervenants", "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61", gestion_utilisateurs)
-section("📋 Suivi des contrôles qualité", "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158", suivi_qualite)
-section("🛠️ Suivi des pannes", "https://images.unsplash.com/photo-1581090700227-1ec7fa9a6a2e", suivi_pannes)
-section("🔧 Pièces détachées", "https://images.unsplash.com/photo-1581093588401-95f2dc9b5b91", gestion_pieces)
-section("📂 Gestion des documents", "https://images.unsplash.com/photo-1581092331458-3996a21b24b8", gestion_docs)
+# Backgrounds
+bg_utilisateurs = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Nuclear_medicine_imaging.jpg/1280px-Nuclear_medicine_imaging.jpg"
+bg_qualite = "https://cdn.sanity.io/images/0vv8moc6/rd-website/674f25a916bc2fcff7bb7cf309f48cf889eeaf2f-1000x667.jpg"
+bg_pannes = "https://www.sciencedirect.com/science/article/pii/S2212958821000114/fx1_lrg.jpg"
+bg_pieces = "https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Fs00259-019-04538-7/MediaObjects/259_2019_4538_Fig1_HTML.png"
+bg_docs = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Technetium_generator.jpg/1200px-Technetium_generator.jpg"
+
+# Affichage par section avec images mises à jour
+section("👥 Gestion des intervenants", bg_utilisateurs, gestion_utilisateurs)
+section("📋 Suivi des contrôles qualité", bg_qualite, suivi_qualite)
+section("🛠️ Suivi des pannes", bg_pannes, suivi_pannes)
+section("🔧 Pièces détachées", bg_pieces, gestion_pieces)
+section("📂 Gestion des documents", bg_docs, gestion_docs)
 
 st.markdown("""<hr style='border: none; height: 2px; background: #666; margin-top: 60px;'>
 <p style='text-align:center;'>Développée par <strong>Maryam Abia</strong></p>""", unsafe_allow_html=True)
