@@ -48,7 +48,6 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS utilisateurs (
 conn.commit()
 
 # Email
-
 def envoyer_email(destinataire, sujet, message):
     sender_email = "maryamabia14@gmail.com"
     app_password = "wyva itgr vrmu keet"
@@ -67,25 +66,29 @@ def envoyer_email(destinataire, sujet, message):
         st.error(f"Erreur email : {e}")
         return False
 
-# CSS
+# Configuration Streamlit
+st.set_page_config(layout="wide")
+
+# CSS personnalisé
 st.markdown("""
     <style>
     .stApp {
-        background-color: #f7f7f7;
+        background-color: #f4f4f4;
         font-family: 'Segoe UI', sans-serif;
     }
+
     .banner {
         position: relative;
         width: 100%;
-        height: 250px;
+        height: 300px;
         background-color: white;
         border-radius: 12px;
-        margin-bottom: 20px;
+        margin-bottom: 40px;
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
     }
+
     .banner img {
         width: 100%;
         height: 100%;
@@ -96,35 +99,49 @@ st.markdown("""
         left: 0;
         z-index: 0;
     }
+
     .banner-text {
         position: relative;
         z-index: 1;
-        background-color: rgba(255, 255, 255, 0.8);
-        padding: 20px 40px;
-        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.85);
+        padding: 25px 50px;
+        border-radius: 12px;
         color: #1f005c;
         text-align: center;
-        font-size: 30px;
+        font-size: 36px;
         font-weight: bold;
         animation: fadeIn 2s ease-in-out;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+
     @keyframes fadeIn {
         from {opacity: 0; transform: translateY(-10px);}
         to {opacity: 1; transform: translateY(0);}
     }
+
     .section-container {
-        border-radius: 30px;
-        padding: 100px 60px;
-        margin-bottom: 30px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        border-radius: 24px;
+        padding: 150px 80px;
+        margin-bottom: 80px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         color: black;
-        background-color: rgba(255, 255, 255, 0.85);
+        background-color: rgba(255, 255, 255, 0.90);
         background-repeat: no-repeat;
         background-size: cover;
         background-position: center;
     }
+
+    .section-container h2 {
+        text-align: center;
+        font-size: 36px;
+        font-weight: bold;
+        color: #003366;
+        margin-bottom: 40px;
+        text-shadow: 1px 1px 2px white;
+    }
+
     .section-container-gestion_intervenants {
-        background-image: url('https://www.shutterstock.com/shutterstock/videos/1106443939/thumb/1.jpg?ip=x480');
+        background-image: url('https://www.shutterstock.com/shutterstock/videos/1106443939/thumb/1.jpg?ip=x1080');
     }
     .section-container-controle_qualite {
         background-image: url('https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg');
@@ -144,17 +161,17 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.set_page_config(layout="wide")
+# Bannière
 st.markdown("""
 <div class="banner">
     <img src="https://img.freepik.com/premium-photo/chemical-molecule-with-blue-background-3d-rendering_772449-4288.jpg" alt="banner" />
     <div class="banner-text">Bienvenue dans l'interface de gestion - Gamma Caméra</div>
 </div>
 """, unsafe_allow_html=True)
+
 st.markdown("Développée par **Maryam Abia**")
 
-# Fonctions de contenu des sections
-
+# Contenus des sections
 def contenu_gestion_intervenants():
     nom = st.text_input("Nom complet", key="nom_utilisateur")
     role = st.selectbox("Rôle", ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"], key="role_utilisateur")
@@ -249,11 +266,10 @@ def contenu_rappels_controles():
             st.error("Erreur lors de l'envoi")
 
 # Affichage des sections
-
 def section_container(key, label, content_func):
     css = f"section-container section-container-{key}"
     st.markdown(f'<div class="{css}">', unsafe_allow_html=True)
-    st.header(label)
+    st.markdown(f"<h2>{label}</h2>", unsafe_allow_html=True)
     content_func()
     st.markdown('</div>', unsafe_allow_html=True)
 
