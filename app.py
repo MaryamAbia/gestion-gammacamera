@@ -127,7 +127,7 @@ st.markdown("""
         background-image: url('https://www.shutterstock.com/shutterstock/videos/1106443939/thumb/1.jpg?ip=x480');
     }
     .section-container-controle_qualite {
-        background-image: url('https://swansea-nuclear-medicine.uk/Images/nuclear-medicine-radioligand.jpg');
+        background-image: url('https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg');
     }
     .section-container-suivi_pannes {
         background-image: url('https://st.depositphotos.com/1471096/58879/i/450/depositphotos_588797742-stock-photo-rendering-cryptocurrency-proton-coin-colorful.jpg');
