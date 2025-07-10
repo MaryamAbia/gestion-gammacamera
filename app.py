@@ -73,65 +73,85 @@ def envoyer_email(destinataire, sujet, message):
         print(f"Erreur lors de l'envoi de l'email : {e}")
         return False
 
-# Mise en page avec background
+# Config page + CSS avec image background et styles pour sections
 st.set_page_config(layout="wide")
+
+# Style CSS avec background image + transparence sections
 st.markdown("""
     <style>
-    [data-testid="stAppViewContainer"] {
-        background-image: url('https://images.unsplash.com/photo-1588776814546-ec9c70d4987d');
+    /* Image background couvrante */
+    .stApp {
+        background-image: url('https://depositphotos.com/fr/photo/dna-and-radioactive-symbols-118319222.html');
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-    }
-
-    [data-testid="stHeader"] {
-        background: transparent;
-    }
-
-    .block-container {
-        padding: 2rem;
-        margin-top: 10px;
+        background-attachment: fixed;
         color: white;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* style blocs (sections) بخلفية شفافة بيضاء مع ظل */
+    .block-container {
+        background-color: rgba(255, 255, 255, 0.85);
+        border-radius: 15px;
+        padding: 25px 40px 40px 40px;
+        color: #1f005c;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        margin-bottom: 30px;
     }
 
     h1, h2, h3 {
-        color: #ffffff;
+        color: #4b007a;
     }
 
-    div.stButton > button {
+    /* ألوان الأزرار */
+    div.stButton > button:first-child {
         background-color: #5b2a86;
         color: white;
-        border-radius: 10px;
-        padding: 0.5em 1em;
-        font-weight: bold;
+        border-radius: 8px;
+        padding: 8px 20px;
         border: none;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+    }
+    div.stButton > button:first-child:hover {
+        background-color: #7d4ba6;
+        cursor: pointer;
     }
 
-    div.stButton > button:hover {
-        background-color: #3e1c62;
+    /* Inputs */
+    .stTextInput>div>div>input,
+    .stSelectbox>div>div>select,
+    .stDateInput>div>div>input {
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        padding: 6px 12px;
+        font-size: 16px;
+        color: #333;
     }
 
-    .stSelectbox label, .stTextInput label, .stTextArea label {
-        color: #ffffff;
+    /* file uploader */
+    .stFileUploader>div>div>input {
+        color: #5b2a86;
+        font-weight: 600;
     }
     </style>
 """, unsafe_allow_html=True)
 
+# Title and subtitle
 st.title("Interface de gestion - Gamma Caméra")
 st.markdown("Développée par **Maryam Abia** – Suivi du contrôle qualité en médecine nucléaire")
 
-# SECTION ACCUEIL
-with st.expander("Accueil", expanded=True):
-    st.image("https://depositphotos.com/fr/photo/scientist-virologist-factory-worker-in-coverall-suit-disinfects-himself-in-decontamination-shower-chamber-biohazard-emergency-423247260.html", width=100)
-    st.image("https://static9.depositphotos.com/1028436/1127/i/450/depositphotos_11273325-stock-photo-atom.jpg", use_column_width=True)
+# Section Accueil
+with st.expander("🏠 Accueil", expanded=True):
+    st.image("https://cdn-icons-png.flaticon.com/512/2872/2872613.png", width=100)
     st.write("""
     Cette interface innovante a été développée dans le cadre d’un projet de fin d’études pour suivre le contrôle de qualité de la gamma caméra.
 
-    \u2619\ufe0f Radioprotection | \u269b\ufe0f Imagerie nucléaire | \ud83e\uddea Suivi qualité
+    ☢️ Radioprotection | ⚛️ Imagerie nucléaire | 🧪 Suivi qualité
     """)
 
-
-# 👥 Utilisateurs
+# Section Utilisateurs
 with st.expander("👥 Gestion des intervenants"):
     nom = st.text_input("Nom complet", key="nom_utilisateur")
     role = st.selectbox("Rôle", ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"], key="role_utilisateur")
@@ -143,7 +163,7 @@ with st.expander("👥 Gestion des intervenants"):
     df_users = pd.read_sql("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
     st.dataframe(df_users)
 
-# 📅 Contrôle qualité
+# Section Contrôles qualité
 with st.expander("📅 Suivi des contrôles de qualité"):
     intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
     if intervenants:
@@ -159,7 +179,7 @@ with st.expander("📅 Suivi des contrôles de qualité"):
     df_cq = pd.read_sql("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
     st.dataframe(df_cq)
 
-# 🛠️ Pannes
+# Section Pannes
 with st.expander("🛠️ Suivi des pannes"):
     intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
     date = st.date_input("Date panne", key="date_panne")
@@ -174,7 +194,7 @@ with st.expander("🛠️ Suivi des pannes"):
     df_pannes = pd.read_sql("SELECT * FROM pannes ORDER BY date DESC", conn)
     st.dataframe(df_pannes)
 
-# 🔧 Pièces détachées
+# Section Pièces détachées
 with st.expander("🔧 Pièces détachées"):
     nom_piece = st.text_input("Nom pièce", key="nom_piece")
     ref = st.text_input("Référence", key="ref_piece")
@@ -189,7 +209,7 @@ with st.expander("🔧 Pièces détachées"):
     df_pieces = pd.read_sql("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
     st.dataframe(df_pieces)
 
-# 📂 Documents
+# Section Documents
 with st.expander("📂 Gestion documentaire"):
     nom_doc = st.text_input("Nom du document", key="nom_doc")
     type_doc = st.selectbox("Type", ["Protocole", "Contrat", "Notice", "Rapport"], key="type_doc")
@@ -202,7 +222,7 @@ with st.expander("📂 Gestion documentaire"):
     df_docs = pd.read_sql("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
     st.dataframe(df_docs)
 
-# 📊 Analyse
+# Section Analyse
 with st.expander("📊 Analyse"):
     df_cq = pd.read_sql("SELECT * FROM controle_qualite", conn)
     if not df_cq.empty:
@@ -217,12 +237,11 @@ with st.expander("📊 Analyse"):
         fig2 = px.bar(grouped, x="date", y="Nombre", title="Pannes par mois")
         st.plotly_chart(fig2)
 
-# 🔔 Rappels
+# Section Rappels
 with st.expander("🔔 Rappels des contrôles"):
     df = pd.read_sql("SELECT * FROM controle_qualite", conn)
     today = datetime.now().date()
     df['date'] = pd.to_datetime(df['date']).dt.date
-
     def check_due(df, type_label, freq_days):
         filt = df[df['type'].str.contains(type_label)]
         if not filt.empty:
@@ -234,7 +253,6 @@ with st.expander("🔔 Rappels des contrôles"):
                 st.success(f"✅ Contrôle {type_label.lower()} fait il y a {delta} jours")
         else:
             st.error(f"❌ Aucun contrôle {type_label.lower()}")
-
     check_due(df, "Journalier", 1)
     check_due(df, "Hebdomadaire", 7)
     check_due(df, "Mensuel", 30)
