@@ -79,10 +79,10 @@ st.markdown("""
         margin-bottom: 30px;
         box-shadow: 0 8px 24px rgba(0,0,0,0.1);
         color: black;
-        background-color: rgba(255, 255, 255, 0.88);
+        background-color: rgba(255, 255, 255, 0.75);
         background-repeat: no-repeat;
-        background-size: 120px 120px;
-        background-position: right bottom;
+        background-size: cover;
+        background-position: center;
     }
     .section-container-gestion_intervenants {
         background-image: url('https://img.freepik.com/premium-photo/clear-nuclear-medicine-image-showing-distribution-radiotracer-within-body-highlighting-areas-high-uptake-set-specialized-imaging-center-with-advanced-technology_1282204-2411.jpg');
