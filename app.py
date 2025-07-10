@@ -141,7 +141,7 @@ st.markdown("""
     }
 
     .section-container-gestion_intervenants {
-        background-image: url('https://www.shutterstock.com/shutterstock/videos/1106443939/thumb/1.jpg?ip=x1080');
+        background-image: url('https://www.shutterstock.com/image-photo/creative-light-bulb-explodes-colorful-600nw-2536939495.jpg');
     }
     .section-container-controle_qualite {
         background-image: url('https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg');
