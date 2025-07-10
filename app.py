@@ -124,7 +124,7 @@ st.markdown("""
         background-position: center;
     }
     .section-container-gestion_intervenants {
-        background-image: url('https://c8.alamy.com/compfr/d3mw8t/les-metastases-multiples-montrant-la-scintigraphie-osseuse-d3mw8t.jpg');
+        background-image: url('https://www.shutterstock.com/shutterstock/videos/1106443939/thumb/1.jpg?ip=x480');
     }
     .section-container-controle_qualite {
         background-image: url('https://swansea-nuclear-medicine.uk/Images/nuclear-medicine-radioligand.jpg');
