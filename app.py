@@ -57,7 +57,6 @@ st.set_page_config(layout="wide")
 st.title("📡 Interface de gestion - Gamma Caméra")
 
 # Fonction d'envoi d'e-mail
-
 def envoyer_email(destinataire, sujet, message):
     sender_email = "maryamabia14@gmail.com"
     app_password = "wyva itgr vrmu keet"
@@ -108,7 +107,6 @@ elif menu == "Utilisateurs":
                 st.success("✅ Intervenant ajouté")
             else:
                 st.warning("Veuillez entrer un nom.")
-
     st.subheader("Liste des intervenants")
     df = pd.read_sql("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
     st.dataframe(df)
@@ -141,7 +139,6 @@ elif menu == "Contrôles de qualité":
                 st.success("✅ Contrôle enregistré")
     else:
         st.warning("⚠️ Veuillez ajouter d'abord des intervenants.")
-
     st.subheader("Historique des contrôles")
     df_cq = pd.read_sql("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
     st.dataframe(df_cq)
@@ -202,7 +199,6 @@ elif menu == "Pannes":
                 st.success("✅ Panne enregistrée")
     else:
         st.warning("Ajoutez d'abord des intervenants.")
-
     st.subheader("Historique des pannes")
     df = pd.read_sql("SELECT * FROM pannes ORDER BY date DESC", conn)
     st.dataframe(df)
@@ -221,7 +217,6 @@ elif menu == "Pièces détachées":
                            (nom, ref, date_commande.strftime('%Y-%m-%d'), fournisseur, date_reception.strftime('%Y-%m-%d')))
             conn.commit()
             st.success("✅ Pièce enregistrée")
-
     st.subheader("Historique des pièces")
     df = pd.read_sql("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
     st.dataframe(df)
@@ -238,7 +233,6 @@ elif menu == "Documents":
             cursor.execute("INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)", (nom, type_doc, blob))
             conn.commit()
             st.success("✅ Document enregistré")
-
     st.subheader("Liste des documents")
     df = pd.read_sql("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
     st.dataframe(df)
@@ -249,7 +243,7 @@ elif menu == "Analyse":
     if not df_cq.empty:
         fig = px.histogram(df_cq, x="type", color="type", title="Nombre de contrôles par type")
         st.plotly_chart(fig)
-
+        st.write(f"Nombre total : {len(df_cq)} contrôles")
     df_pannes = pd.read_sql("SELECT * FROM pannes", conn)
     if not df_pannes.empty:
         df_pannes['date'] = pd.to_datetime(df_pannes['date'])
@@ -257,6 +251,7 @@ elif menu == "Analyse":
         freq['date'] = freq['date'].astype(str)
         fig = px.bar(freq, x='date', y='Nombre', title="Fréquence des pannes par mois")
         st.plotly_chart(fig)
+        st.write(f"Nombre total : {len(df_pannes)} pannes")
 
 elif menu == "Rappels automatiques":
     st.header("🔔 Rappels des contrôles qualité")
@@ -266,7 +261,6 @@ elif menu == "Rappels automatiques":
     else:
         df['date'] = pd.to_datetime(df['date']).dt.date
         today = datetime.now().date()
-
         freqs = {
             "Linéarité": 7,
             "Uniformité intrinsèque": 7,
@@ -276,7 +270,6 @@ elif menu == "Rappels automatiques":
             "Résolution énergétique": 365,
             "Centre de rotation": 180
         }
-
         for test, jours in freqs.items():
             filt = df[df['type'] == test]
             if not filt.empty:
@@ -288,7 +281,6 @@ elif menu == "Rappels automatiques":
                     st.success(f"✅ {test} à jour ({delta} jours)")
             else:
                 st.error(f"❌ Aucun {test} enregistré")
-
         if st.button("📧 Envoyer rappel par e-mail"):
             msg = "Ceci est un rappel automatique pour effectuer les contrôles qualité de la gamma caméra."
             sent = envoyer_email("maryamabia01@gmail.com", "Rappel des contrôles qualité", msg)
