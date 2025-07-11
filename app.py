@@ -7,11 +7,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# Connexion à la base de données SQLite
+# Connexion à la base de données
 conn = sqlite3.connect("gamma_camera.db", check_same_thread=False)
 cursor = conn.cursor()
 
-# Création des tables si elles n'existent pas
+# Création des tables
 cursor.execute('''CREATE TABLE IF NOT EXISTS controle_qualite (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT,
@@ -56,10 +56,11 @@ conn.commit()
 st.set_page_config(layout="wide")
 st.title("📡 Interface de gestion - Gamma Caméra")
 
-# Fonction pour envoyer un email
+# Fonction d'envoi d'e-mail
+
 def envoyer_email(destinataire, sujet, message):
     sender_email = "maryamabia14@gmail.com"
-    app_password = "wyva itgr vrmu keet"  # Remplace par ton vrai mot de passe application
+    app_password = "wyva itgr vrmu keet"
     msg = MIMEMultipart()
     msg["From"] = sender_email
     msg["To"] = destinataire
@@ -71,8 +72,7 @@ def envoyer_email(destinataire, sujet, message):
         server.sendmail(sender_email, destinataire, msg.as_string())
         server.quit()
         return True
-    except Exception as e:
-        st.error(f"Erreur d'envoi email: {e}")
+    except Exception:
         return False
 
 # Menu principal
