@@ -2,7 +2,6 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 from datetime import datetime
-import plotly.express as px
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -255,16 +254,16 @@ elif menu == "Analyse":
             "Centre de rotation": "Semestrielle"
         }
 
-        df_summary = pd.DataFrame(columns=["Type de contrôle", "Fréquence attendue", "Nombre de fois effectué"])
-
+        data_list = []
         for test, freq in freqs.items():
             count = df_cq[df_cq["type"] == test].shape[0]
-            df_summary = df_summary.append({
+            data_list.append({
                 "Type de contrôle": test,
                 "Fréquence attendue": freq,
                 "Nombre de fois effectué": count
-            }, ignore_index=True)
+            })
 
+        df_summary = pd.DataFrame(data_list)
         st.dataframe(df_summary)
 
 elif menu == "Rappels automatiques":
