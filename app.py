@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 conn = sqlite3.connect("gamma_camera.db", check_same_thread=False)
 cursor = conn.cursor()
 
-# Création des tables
+# Création des tables si pas existantes
 cursor.execute('''CREATE TABLE IF NOT EXISTS controle_qualite (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT,
@@ -49,12 +49,13 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS utilisateurs (
     nom TEXT,
     role TEXT
 )''')
+
 conn.commit()
 
-# Envoi d'e-mails
+# Fonction d'envoi d'email via SMTP Gmail
 def envoyer_email(destinataire, sujet, message):
     sender_email = "maryamabia14@gmail.com"
-    app_password = "wyva itgr vrmu keet"
+    app_password = "wyva itgr vrmu keet"  # Change par ton vrai mot de passe ou app password
 
     msg = MIMEMultipart()
     msg["From"] = sender_email
@@ -69,10 +70,10 @@ def envoyer_email(destinataire, sujet, message):
         server.quit()
         return True
     except Exception as e:
-        print(f"Erreur lors de l'envoi de l'email : {e}")
+        st.error(f"Erreur lors de l'envoi de l'email : {e}")
         return False
 
-# Menu
+# Menu Sidebar
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Medical_Symbol.svg/2048px-Medical_Symbol.svg.png", width=80)
 st.sidebar.title("📋 Menu")
 page = st.sidebar.radio("Aller vers :", [
@@ -84,10 +85,10 @@ page = st.sidebar.radio("Aller vers :", [
     "Documents",
     "Analyse",
     "Téléchargement des données",
-    "Rappels de contrôles",
-    "Descriptions des Tests"
+    "Rappels de contrôles"
 ])
 
+# Style CSS principal
 st.markdown("""
     <style>
     .main {
@@ -101,23 +102,24 @@ st.markdown("""
 
 st.markdown('<div class="main">', unsafe_allow_html=True)
 
+# Page Accueil
 if page == "Accueil":
     st.title("📡 Interface de gestion - Gamma Caméra")
     st.markdown("""
-        Bienvenue dans l'interface de gestion dédiée au suivi de la gamma caméra.
-        
-        Utilisez le menu à gauche pour naviguer entre les différentes sections :
-        - Ajouter et gérer les intervenants 👥
-        - Suivre les contrôles qualité 📅
-        - Documenter les pannes et réparations 🛠️
-        - Gérer les pièces détachées 🔧
-        - Organiser les documents 📂
-        - Analyser les données 📊
-        - Exporter les informations 📥
-        - Recevoir des rappels automatisés 🔔
-        - Consulter les descriptions des tests 🔬
+    Bienvenue dans l'interface de gestion dédiée au suivi de la gamma caméra.
+
+    Utilisez le menu à gauche pour naviguer entre les différentes sections :
+    - Ajouter et gérer les intervenants 👥
+    - Suivre les contrôles qualité 📅
+    - Documenter les pannes et réparations 🛠️
+    - Gérer les pièces détachées 🔧
+    - Organiser les documents 📂
+    - Analyser les données 📊
+    - Exporter les informations 📥
+    - Recevoir des rappels automatisés 🔔
     """)
 
+# Page Utilisateurs
 elif page == "Utilisateurs":
     st.title("👥 Gestion des intervenants")
 
@@ -138,6 +140,7 @@ elif page == "Utilisateurs":
     df = pd.read_sql_query("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
     st.dataframe(df)
 
+# Page Contrôles de qualité
 elif page == "Contrôles de qualité":
     st.title("📅 Suivi des contrôles de qualité")
 
@@ -173,6 +176,7 @@ elif page == "Contrôles de qualité":
     st.dataframe(df)
     st.download_button("📥 Télécharger CSV", data=df.to_csv(index=False), file_name="controle_qualite.csv", mime="text/csv")
 
+# Page Pannes et Maintenance
 elif page == "Pannes et Maintenance":
     st.title("🛠️ Suivi des pannes et maintenance")
 
@@ -200,6 +204,7 @@ elif page == "Pannes et Maintenance":
     st.dataframe(df)
     st.download_button("📥 Télécharger CSV", data=df.to_csv(index=False), file_name="pannes.csv", mime="text/csv")
 
+# Page Pièces détachées
 elif page == "Pièces détachées":
     st.title("🔧 Suivi des pièces détachées")
 
@@ -224,6 +229,7 @@ elif page == "Pièces détachées":
     st.dataframe(df)
     st.download_button("📥 Télécharger CSV", data=df.to_csv(index=False), file_name="pieces_detachees.csv", mime="text/csv")
 
+# Page Documents
 elif page == "Documents":
     st.title("📂 Gestion documentaire")
 
@@ -232,28 +238,36 @@ elif page == "Documents":
         type_doc = st.selectbox("Type", ["Protocole", "Contrat", "Notice", "Rapport"])
         fichier = st.file_uploader("Téléverser un fichier", type=["pdf", "docx", "png", "jpg"])
         submit = st.form_submit_button("Enregistrer")
-        if submit and fichier is not None:
-            blob = fichier.read()
-            cursor.execute(
-                "INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)",
-                (nom, type_doc, blob)
-            )
-            conn.commit()
-            st.success("✅ Document enregistré")
-            st.experimental_rerun()
+        if submit:
+            if nom.strip() == "":
+                st.error("Le nom du document est requis.")
+            elif fichier is None:
+                st.error("Veuillez téléverser un fichier.")
+            else:
+                blob = fichier.read()
+                cursor.execute(
+                    "INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)",
+                    (nom, type_doc, blob)
+                )
+                conn.commit()
+                st.success("✅ Document enregistré")
+                st.experimental_rerun()
 
     st.subheader("Liste des documents")
     df = pd.read_sql_query("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
     st.dataframe(df)
 
+# Page Analyse
 elif page == "Analyse":
     st.title("📊 Analyse des données")
 
+    # Analyse contrôles qualité
     df_cq = pd.read_sql_query("SELECT * FROM controle_qualite", conn)
     if not df_cq.empty:
         fig_cq = px.histogram(df_cq, x="type", color="type", title="Nombre de contrôles par type")
         st.plotly_chart(fig_cq)
 
+    # Analyse pannes par mois
     df_pannes = pd.read_sql_query("SELECT * FROM pannes", conn)
     if not df_pannes.empty:
         df_pannes['date'] = pd.to_datetime(df_pannes['date'])
@@ -262,6 +276,7 @@ elif page == "Analyse":
         fig_pannes = px.bar(pannes_par_mois, x='date', y='Nombre', title="Fréquence des pannes par mois")
         st.plotly_chart(fig_pannes)
 
+# Page Téléchargement global des données
 elif page == "Téléchargement des données":
     st.title("📥 Exportation globale des données")
     tables = {
@@ -270,12 +285,12 @@ elif page == "Téléchargement des données":
         "Pièces détachées": "pieces_detachees",
         "Utilisateurs": "utilisateurs"
     }
-
     for label, table in tables.items():
         df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
         csv = df.to_csv(index=False)
         st.download_button(f"📁 Télécharger - {label}", data=csv, file_name=f"{table}.csv", mime="text/csv")
 
+# Page Rappels de contrôles
 elif page == "Rappels de contrôles":
     st.title("🔔 Rappels des contrôles")
 
@@ -286,6 +301,7 @@ elif page == "Rappels de contrôles":
     else:
         df['date'] = pd.to_datetime(df['date']).dt.date
 
+        # Fonction pour vérifier si un contrôle est en retard
         def check_due(df, type_label, freq_days):
             filt = df[df['type'].str.contains(type_label)]
             if not filt.empty:
@@ -298,68 +314,30 @@ elif page == "Rappels de contrôles":
             else:
                 st.error(f"❌ Aucun enregistrement pour contrôle {type_label.lower()}")
 
-        check_due(df, "Linéarité", 7)
-        check_due(df, "Uniformité intrinsèque", 7)
-        check_due(df, "Résolution spatiale intrinsèque", 30)
-        check_due(df, "Uniformité système avec collimateur", 7)
-        check_due(df, "Sensibilité", 365)
-        check_due(df, "Résolution énergétique", 365)
+        check_due(df, "Linéarité", 7)  # Hebdomadaire
+        check_due(df, "Uniformité intrinsèque", 7)  # Hebdomadaire
+        check_due(df, "Uniformité intrinsèque", 30)  # Mensuelle
+        check_due(df, "Résolution spatiale intrinsèque", 30)  # Mensuelle
+        check_due(df, "Uniformité système avec collimateur", 7)  # Hebdomadaire
+        check_due(df, "Uniformité système avec collimateur", 182)  # Semestrielle (~6 mois)
+        check_due(df, "Sensibilité", 365)  # Annuelle
+        check_due(df, "Résolution énergétique", 365)  # Annuelle
 
-    st.info("Les rappels sont calculés par rapport à la dernière date enregistrée dans chaque type de contrôle.")
+        st.info("Les rappels sont basés sur la dernière date enregistrée pour chaque type de contrôle.")
 
-    if st.button("Envoyer un e-mail de rappel"):
-        sujet = "Rappel des contrôles Gamma Caméra"
-        message = (
-            "Bonjour,\n\n"
-            "Ceci est un rappel automatique pour effectuer les contrôles nécessaires sur la gamma caméra.\n\n"
-            "Merci.\n\n"
-            "Cordialement,\n"
-            "Interface de gestion Gamma Caméra"
-        )
-        success = envoyer_email("maryamabia01@gmail.com", sujet, message)
-        if success:
-            st.success("E-mail envoyé avec succès !")
-        else:
-            st.error("Erreur lors de l'envoi de l'e-mail.")
-
-elif page == "Descriptions des Tests":
-    st.title("📖 Descriptions des tests de la gamma caméra")
-
-    tests_info = {
-        "Linéarité": {
-            "fréquence": "Hebdomadaire et Semestrielle",
-            "description": "Vérifie que la gamma caméra restitue correctement les formes sans distorsion."
-        },
-        "Uniformité intrinsèque": {
-            "fréquence": "Hebdomadaire (10×10⁶ coups) et Mensuelle (200×10⁶ coups)",
-            "description": "Contrôle la capacité de la gamma caméra à produire une image homogène à partir d'une source uniforme."
-        },
-        "Résolution spatiale intrinsèque": {
-            "fréquence": "Mensuelle",
-            "description": "Évalue la capacité de la gamma caméra à distinguer les détails fins (sans collimateur)."
-        },
-        "Uniformité système avec collimateur": {
-            "fréquence": "Hebdomadaire (visuel) et Semestrielle (quantitatif)",
-            "description": "Vérifie l’homogénéité de l’image produite avec collimateur."
-        },
-        "Sensibilité": {
-            "fréquence": "Annuelle",
-            "description": "Évalue la réponse du système à un radionucléide d’activité connue."
-        },
-        "Résolution énergétique": {
-            "fréquence": "Annuelle",
-            "description": "Mesure la capacité du système à distinguer les photons d’énergie proche (typiquement 10 % à 140 keV)."
-        },
-        "Centre de rotation": {
-            "fréquence": "Tomographique (réception + périodique)",
-            "description": "Évalue l’alignement correct du système lors de l’acquisition tomographique."
-        }
-    }
-
-    for test, infos in tests_info.items():
-        st.markdown(f"### 🔬 {test}")
-        st.markdown(f"**Fréquence :** {infos['fréquence']}")
-        st.markdown(f"**Description :** {infos['description']}")
-        st.markdown("---")
+        if st.button("Envoyer un e-mail de rappel"):
+            sujet = "Rappel des contrôles Gamma Caméra"
+            message = (
+                "Bonjour,\n\n"
+                "Ceci est un rappel automatique pour effectuer les contrôles nécessaires sur la gamma caméra.\n\n"
+                "Merci.\n\n"
+                "Cordialement,\n"
+                "Interface de gestion Gamma Caméra"
+            )
+            success = envoyer_email("maryamabia01@gmail.com", sujet, message)
+            if success:
+                st.success("E-mail envoyé avec succès !")
+            else:
+                st.error("Erreur lors de l'envoi de l'e-mail.")
 
 st.markdown('</div>', unsafe_allow_html=True)
