@@ -86,22 +86,6 @@ def envoyer_email(destinataire, sujet, message):
     except Exception as e:
         print(f"Erreur lors de l'envoi de l'email : {e}")
         return False
-
-# --------------------------------------
-# Fonction simple de connexion (login)
-# Ici, c'est un login statique avec username="admin" et password="1234"
-# Vous pouvez améliorer pour gérer plusieurs utilisateurs plus tard
-# --------------------------------------
-# Vérification de l'état de connexion dans la session
-# Si l'utilisateur n'est pas connecté, afficher le formulaire de login et stopper l'app
-# --------------------------------------
-if "logged_in" not in st.session_state:
-    st.session_state["logged_in"] = False
-
-if not st.session_state["logged_in"]:
-    login()
-    st.stop()
-
 # --------------------------------------
 # Barre latérale (Sidebar) : menu de navigation
 # Affichage du logo et choix de la page à afficher
