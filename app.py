@@ -171,7 +171,7 @@ elif menu == "Descriptions des tests":
             "description": "Mesure la capacité du système à distinguer les photons d’énergie proche (typiquement 10 % à 140 keV)."
         },
         "Centre de rotation": {
-            "fréquence": "Tomographique (réception + périodique)",
+            "fréquence": "Semestrielle",
             "description": "Évalue l’alignement correct du système lors de l’acquisition tomographique."
         }
     }
@@ -238,20 +238,34 @@ elif menu == "Documents":
     st.dataframe(df)
 
 elif menu == "Analyse":
-    st.header("📊 Analyse des données")
+    st.header("📊 Classification des contrôles qualité")
+
     df_cq = pd.read_sql("SELECT * FROM controle_qualite", conn)
-    if not df_cq.empty:
-        fig = px.histogram(df_cq, x="type", color="type", title="Nombre de contrôles par type")
-        st.plotly_chart(fig)
-        st.write(f"Nombre total : {len(df_cq)} contrôles")
-    df_pannes = pd.read_sql("SELECT * FROM pannes", conn)
-    if not df_pannes.empty:
-        df_pannes['date'] = pd.to_datetime(df_pannes['date'])
-        freq = df_pannes.groupby(df_pannes['date'].dt.to_period('M')).size().reset_index(name='Nombre')
-        freq['date'] = freq['date'].astype(str)
-        fig = px.bar(freq, x='date', y='Nombre', title="Fréquence des pannes par mois")
-        st.plotly_chart(fig)
-        st.write(f"Nombre total : {len(df_pannes)} pannes")
+
+    if df_cq.empty:
+        st.warning("Aucun contrôle de qualité enregistré.")
+    else:
+        freqs = {
+            "Linéarité": "Hebdomadaire",
+            "Uniformité intrinsèque": "Hebdomadaire",
+            "Résolution spatiale intrinsèque": "Mensuelle",
+            "Uniformité système avec collimateur": "Hebdomadaire",
+            "Sensibilité": "Annuelle",
+            "Résolution énergétique": "Annuelle",
+            "Centre de rotation": "Semestrielle"
+        }
+
+        df_summary = pd.DataFrame(columns=["Type de contrôle", "Fréquence attendue", "Nombre de fois effectué"])
+
+        for test, freq in freqs.items():
+            count = df_cq[df_cq["type"] == test].shape[0]
+            df_summary = df_summary.append({
+                "Type de contrôle": test,
+                "Fréquence attendue": freq,
+                "Nombre de fois effectué": count
+            }, ignore_index=True)
+
+        st.dataframe(df_summary)
 
 elif menu == "Rappels automatiques":
     st.header("🔔 Rappels des contrôles qualité")
@@ -261,6 +275,7 @@ elif menu == "Rappels automatiques":
     else:
         df['date'] = pd.to_datetime(df['date']).dt.date
         today = datetime.now().date()
+
         freqs = {
             "Linéarité": 7,
             "Uniformité intrinsèque": 7,
@@ -270,6 +285,7 @@ elif menu == "Rappels automatiques":
             "Résolution énergétique": 365,
             "Centre de rotation": 180
         }
+
         for test, jours in freqs.items():
             filt = df[df['type'] == test]
             if not filt.empty:
@@ -281,6 +297,7 @@ elif menu == "Rappels automatiques":
                     st.success(f"✅ {test} à jour ({delta} jours)")
             else:
                 st.error(f"❌ Aucun {test} enregistré")
+
         if st.button("📧 Envoyer rappel par e-mail"):
             msg = "Ceci est un rappel automatique pour effectuer les contrôles qualité de la gamma caméra."
             sent = envoyer_email("maryamabia01@gmail.com", "Rappel des contrôles qualité", msg)
