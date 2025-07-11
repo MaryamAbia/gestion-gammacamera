@@ -7,11 +7,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# Connexion à la base de données SQLite
+# Connexion à la base de données
 conn = sqlite3.connect("gamma_camera.db", check_same_thread=False)
 cursor = conn.cursor()
 
-# Création des tables si pas existantes
+# Création des tables
 cursor.execute('''CREATE TABLE IF NOT EXISTS controle_qualite (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT,
@@ -20,12 +20,25 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS controle_qualite (
     resultat TEXT
 )''')
 
+cursor.execute('''CREATE TABLE IF NOT EXISTS utilisateurs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom TEXT,
+    role TEXT
+)''')
+
 cursor.execute('''CREATE TABLE IF NOT EXISTS pannes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT,
     description TEXT,
     intervenant TEXT,
     action TEXT
+)''')
+
+cursor.execute('''CREATE TABLE IF NOT EXISTS documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom TEXT,
+    type TEXT,
+    fichier BLOB
 )''')
 
 cursor.execute('''CREATE TABLE IF NOT EXISTS pieces_detachees (
@@ -37,32 +50,22 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS pieces_detachees (
     date_reception TEXT
 )''')
 
-cursor.execute('''CREATE TABLE IF NOT EXISTS documents (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT,
-    type TEXT,
-    fichier BLOB
-)''')
-
-cursor.execute('''CREATE TABLE IF NOT EXISTS utilisateurs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT,
-    role TEXT
-)''')
-
 conn.commit()
 
-# Fonction d'envoi d'email via SMTP Gmail
+# Configuration Streamlit
+st.set_page_config(layout="wide")
+st.title("📡 Interface de gestion - Gamma Caméra")
+
+# Fonction d'envoi d'e-mail
+
 def envoyer_email(destinataire, sujet, message):
     sender_email = "maryamabia14@gmail.com"
-    app_password = "wyva itgr vrmu keet"  # Change par ton vrai mot de passe ou app password
-
+    app_password = "wyva itgr vrmu keet"
     msg = MIMEMultipart()
     msg["From"] = sender_email
     msg["To"] = destinataire
     msg["Subject"] = sujet
     msg.attach(MIMEText(message, "plain"))
-
     try:
         server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
         server.login(sender_email, app_password)
@@ -70,144 +73,142 @@ def envoyer_email(destinataire, sujet, message):
         server.quit()
         return True
     except Exception as e:
-        st.error(f"Erreur lors de l'envoi de l'email : {e}")
         return False
 
-# Menu Sidebar
-st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Medical_Symbol.svg/2048px-Medical_Symbol.svg.png", width=80)
-st.sidebar.title("📋 Menu")
-page = st.sidebar.radio("Aller vers :", [
+# Menu principal
+menu = st.sidebar.radio("Navigation", [
     "Accueil",
     "Utilisateurs",
     "Contrôles de qualité",
-    "Pannes et Maintenance",
+    "Descriptions des tests",
+    "Pannes",
     "Pièces détachées",
     "Documents",
     "Analyse",
-    "Téléchargement des données",
-    "Rappels de contrôles"
+    "Rappels automatiques"
 ])
 
-# Style CSS principal
-st.markdown("""
-    <style>
-    .main {
-        background-color: #f5f5f5;
-        padding: 20px;
-        border-radius: 10px;
-        font-family: Arial, sans-serif;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-st.markdown('<div class="main">', unsafe_allow_html=True)
-
-# Page Accueil
-if page == "Accueil":
-    st.title("📡 Interface de gestion - Gamma Caméra")
+if menu == "Accueil":
     st.markdown("""
-    Bienvenue dans l'interface de gestion dédiée au suivi de la gamma caméra.
-
-    Utilisez le menu à gauche pour naviguer entre les différentes sections :
-    - Ajouter et gérer les intervenants 👥
-    - Suivre les contrôles qualité 📅
-    - Documenter les pannes et réparations 🛠️
-    - Gérer les pièces détachées 🔧
-    - Organiser les documents 📂
-    - Analyser les données 📊
-    - Exporter les informations 📥
-    - Recevoir des rappels automatisés 🔔
+    ## Bienvenue 👋
+    Interface complète de gestion de la gamma caméra : utilisateurs, contrôles qualité, pannes, documents, pièces détachées, rappels automatiques, et plus encore.
+    Utilisez le menu à gauche pour naviguer entre les sections.
     """)
 
-# Page Utilisateurs
-elif page == "Utilisateurs":
-    st.title("👥 Gestion des intervenants")
-
+elif menu == "Utilisateurs":
+    st.header("👥 Gestion des intervenants")
     with st.form("form_user"):
         nom = st.text_input("Nom complet")
         role = st.selectbox("Rôle", ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"])
         submit = st.form_submit_button("Ajouter")
         if submit:
-            if nom.strip() == "":
-                st.error("Le nom ne peut pas être vide.")
-            else:
+            if nom.strip() != "":
                 cursor.execute("INSERT INTO utilisateurs (nom, role) VALUES (?, ?)", (nom, role))
                 conn.commit()
                 st.success("✅ Intervenant ajouté")
-                st.experimental_rerun()
+            else:
+                st.warning("Veuillez entrer un nom.")
 
     st.subheader("Liste des intervenants")
-    df = pd.read_sql_query("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
+    df = pd.read_sql("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
     st.dataframe(df)
 
-# Page Contrôles de qualité
-elif page == "Contrôles de qualité":
-    st.title("📅 Suivi des contrôles de qualité")
-
-    intervenants = pd.read_sql_query("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
-    if not intervenants:
-        st.warning("⚠️ Ajoutez d'abord des intervenants dans la section 'Utilisateurs'.")
-    else:
+elif menu == "Contrôles de qualité":
+    st.header("📅 Enregistrement des contrôles de qualité")
+    intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
+    types_tests = [
+        "Linéarité",
+        "Uniformité intrinsèque",
+        "Résolution spatiale intrinsèque",
+        "Uniformité système avec collimateur",
+        "Sensibilité",
+        "Résolution énergétique",
+        "Centre de rotation"
+    ]
+    if intervenants:
         with st.form("form_cq"):
-            date = st.date_input("Date du contrôle", value=datetime.now())
-            type_cq = st.selectbox("Type de contrôle", [
-                "Linéarité (Hebdomadaire)",
-                "Uniformité intrinsèque (Hebdomadaire et Mensuelle)",
-                "Résolution spatiale intrinsèque (Mensuelle)",
-                "Uniformité système avec collimateur (Hebdomadaire et Semestrielle)",
-                "Sensibilité (Annuelle)",
-                "Résolution énergétique (Annuelle)",
-                "Centre de rotation (Tomographique)"
-            ])
+            date = st.date_input("Date", value=datetime.now())
+            type_test = st.selectbox("Type de test", types_tests)
             intervenant = st.selectbox("Intervenant", intervenants)
-            resultat = st.text_area("Résultat ou observation")
+            resultat = st.text_area("Observation / Résultat")
             submit = st.form_submit_button("Enregistrer")
             if submit:
-                cursor.execute(
-                    "INSERT INTO controle_qualite (date, type, intervenant, resultat) VALUES (?, ?, ?, ?)",
-                    (date.strftime('%Y-%m-%d'), type_cq, intervenant, resultat)
-                )
+                cursor.execute("""
+                    INSERT INTO controle_qualite (date, type, intervenant, resultat)
+                    VALUES (?, ?, ?, ?)
+                """, (date.strftime('%Y-%m-%d'), type_test, intervenant, resultat))
                 conn.commit()
                 st.success("✅ Contrôle enregistré")
-                st.experimental_rerun()
+    else:
+        st.warning("⚠️ Veuillez ajouter d'abord des intervenants.")
 
     st.subheader("Historique des contrôles")
-    df = pd.read_sql_query("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
-    st.dataframe(df)
-    st.download_button("📥 Télécharger CSV", data=df.to_csv(index=False), file_name="controle_qualite.csv", mime="text/csv")
+    df_cq = pd.read_sql("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
+    st.dataframe(df_cq)
 
-# Page Pannes et Maintenance
-elif page == "Pannes et Maintenance":
-    st.title("🛠️ Suivi des pannes et maintenance")
+elif menu == "Descriptions des tests":
+    st.header("📖 Descriptions des tests de la gamma caméra")
+    tests_info = {
+        "Linéarité": {
+            "fréquence": "Hebdomadaire et Semestrielle",
+            "description": "Vérifie que la gamma caméra restitue correctement les formes sans distorsion."
+        },
+        "Uniformité intrinsèque": {
+            "fréquence": "Hebdomadaire (10×10⁶ coups) et Mensuelle (200×10⁶ coups)",
+            "description": "Contrôle la capacité de la gamma caméra à produire une image homogène à partir d'une source uniforme."
+        },
+        "Résolution spatiale intrinsèque": {
+            "fréquence": "Mensuelle",
+            "description": "Évalue la capacité de la gamma caméra à distinguer les détails fins (sans collimateur)."
+        },
+        "Uniformité système avec collimateur": {
+            "fréquence": "Hebdomadaire (visuel) et Semestrielle (quantitatif)",
+            "description": "Vérifie l’homogénéité de l’image produite avec collimateur."
+        },
+        "Sensibilité": {
+            "fréquence": "Annuelle",
+            "description": "Évalue la réponse du système à un radionucléide d’activité connue."
+        },
+        "Résolution énergétique": {
+            "fréquence": "Annuelle",
+            "description": "Mesure la capacité du système à distinguer les photons d’énergie proche (typiquement 10 % à 140 keV)."
+        },
+        "Centre de rotation": {
+            "fréquence": "Tomographique (réception + périodique)",
+            "description": "Évalue l’alignement correct du système lors de l’acquisition tomographique."
+        }
+    }
+    for test, infos in tests_info.items():
+        with st.container():
+            st.subheader(f"🔬 {test}")
+            st.markdown(f"**Fréquence :** {infos['fréquence']}")
+            st.markdown(f"**Description :** {infos['description']}")
+            st.markdown("---")
 
-    intervenants = pd.read_sql_query("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
-    if not intervenants:
-        st.warning("⚠️ Ajoutez d'abord des intervenants dans la section 'Utilisateurs'.")
-    else:
+elif menu == "Pannes":
+    st.header("🛠️ Suivi des pannes")
+    intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
+    if intervenants:
         with st.form("form_panne"):
-            date = st.date_input("Date de l'incident", value=datetime.now())
+            date = st.date_input("Date", value=datetime.now())
             description = st.text_area("Description de la panne")
             intervenant = st.selectbox("Intervenant", intervenants)
-            action = st.text_area("Action ou réparation effectuée")
+            action = st.text_area("Action effectuée")
             submit = st.form_submit_button("Enregistrer")
             if submit:
-                cursor.execute(
-                    "INSERT INTO pannes (date, description, intervenant, action) VALUES (?, ?, ?, ?)",
-                    (date.strftime('%Y-%m-%d'), description, intervenant, action)
-                )
+                cursor.execute("INSERT INTO pannes (date, description, intervenant, action) VALUES (?, ?, ?, ?)",
+                               (date.strftime('%Y-%m-%d'), description, intervenant, action))
                 conn.commit()
                 st.success("✅ Panne enregistrée")
-                st.experimental_rerun()
+    else:
+        st.warning("Ajoutez d'abord des intervenants.")
 
     st.subheader("Historique des pannes")
-    df = pd.read_sql_query("SELECT * FROM pannes ORDER BY date DESC", conn)
+    df = pd.read_sql("SELECT * FROM pannes ORDER BY date DESC", conn)
     st.dataframe(df)
-    st.download_button("📥 Télécharger CSV", data=df.to_csv(index=False), file_name="pannes.csv", mime="text/csv")
 
-# Page Pièces détachées
-elif page == "Pièces détachées":
-    st.title("🔧 Suivi des pièces détachées")
-
+elif menu == "Pièces détachées":
+    st.header("🔧 Gestion des pièces détachées")
     with st.form("form_piece"):
         nom = st.text_input("Nom de la pièce")
         ref = st.text_input("Référence")
@@ -216,128 +217,82 @@ elif page == "Pièces détachées":
         date_reception = st.date_input("Date de réception")
         submit = st.form_submit_button("Enregistrer")
         if submit:
-            cursor.execute(
-                "INSERT INTO pieces_detachees (nom, ref, date_commande, fournisseur, date_reception) VALUES (?, ?, ?, ?, ?)",
-                (nom, ref, date_commande.strftime('%Y-%m-%d'), fournisseur, date_reception.strftime('%Y-%m-%d'))
-            )
+            cursor.execute("INSERT INTO pieces_detachees (nom, ref, date_commande, fournisseur, date_reception) VALUES (?, ?, ?, ?, ?)",
+                           (nom, ref, date_commande.strftime('%Y-%m-%d'), fournisseur, date_reception.strftime('%Y-%m-%d')))
             conn.commit()
             st.success("✅ Pièce enregistrée")
-            st.experimental_rerun()
 
-    st.subheader("Historique des pièces détachées")
-    df = pd.read_sql_query("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
+    st.subheader("Historique des pièces")
+    df = pd.read_sql("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
     st.dataframe(df)
-    st.download_button("📥 Télécharger CSV", data=df.to_csv(index=False), file_name="pieces_detachees.csv", mime="text/csv")
 
-# Page Documents
-elif page == "Documents":
-    st.title("📂 Gestion documentaire")
-
+elif menu == "Documents":
+    st.header("📂 Gestion des documents")
     with st.form("form_doc"):
         nom = st.text_input("Nom du document")
         type_doc = st.selectbox("Type", ["Protocole", "Contrat", "Notice", "Rapport"])
-        fichier = st.file_uploader("Téléverser un fichier", type=["pdf", "docx", "png", "jpg"])
+        fichier = st.file_uploader("Fichier", type=["pdf", "docx", "png", "jpg"])
         submit = st.form_submit_button("Enregistrer")
-        if submit:
-            if nom.strip() == "":
-                st.error("Le nom du document est requis.")
-            elif fichier is None:
-                st.error("Veuillez téléverser un fichier.")
-            else:
-                blob = fichier.read()
-                cursor.execute(
-                    "INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)",
-                    (nom, type_doc, blob)
-                )
-                conn.commit()
-                st.success("✅ Document enregistré")
-                st.experimental_rerun()
+        if submit and fichier:
+            blob = fichier.read()
+            cursor.execute("INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)", (nom, type_doc, blob))
+            conn.commit()
+            st.success("✅ Document enregistré")
 
     st.subheader("Liste des documents")
-    df = pd.read_sql_query("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
+    df = pd.read_sql("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
     st.dataframe(df)
 
-# Page Analyse
-elif page == "Analyse":
-    st.title("📊 Analyse des données")
-
-    # Analyse contrôles qualité
-    df_cq = pd.read_sql_query("SELECT * FROM controle_qualite", conn)
+elif menu == "Analyse":
+    st.header("📊 Analyse des données")
+    df_cq = pd.read_sql("SELECT * FROM controle_qualite", conn)
     if not df_cq.empty:
-        fig_cq = px.histogram(df_cq, x="type", color="type", title="Nombre de contrôles par type")
-        st.plotly_chart(fig_cq)
+        fig = px.histogram(df_cq, x="type", color="type", title="Nombre de contrôles par type")
+        st.plotly_chart(fig)
 
-    # Analyse pannes par mois
-    df_pannes = pd.read_sql_query("SELECT * FROM pannes", conn)
+    df_pannes = pd.read_sql("SELECT * FROM pannes", conn)
     if not df_pannes.empty:
         df_pannes['date'] = pd.to_datetime(df_pannes['date'])
-        pannes_par_mois = df_pannes.groupby(df_pannes['date'].dt.to_period('M')).size().reset_index(name='Nombre')
-        pannes_par_mois['date'] = pannes_par_mois['date'].astype(str)
-        fig_pannes = px.bar(pannes_par_mois, x='date', y='Nombre', title="Fréquence des pannes par mois")
-        st.plotly_chart(fig_pannes)
+        freq = df_pannes.groupby(df_pannes['date'].dt.to_period('M')).size().reset_index(name='Nombre')
+        freq['date'] = freq['date'].astype(str)
+        fig = px.bar(freq, x='date', y='Nombre', title="Fréquence des pannes par mois")
+        st.plotly_chart(fig)
 
-# Page Téléchargement global des données
-elif page == "Téléchargement des données":
-    st.title("📥 Exportation globale des données")
-    tables = {
-        "Contrôles de qualité": "controle_qualite",
-        "Pannes": "pannes",
-        "Pièces détachées": "pieces_detachees",
-        "Utilisateurs": "utilisateurs"
-    }
-    for label, table in tables.items():
-        df = pd.read_sql_query(f"SELECT * FROM {table}", conn)
-        csv = df.to_csv(index=False)
-        st.download_button(f"📁 Télécharger - {label}", data=csv, file_name=f"{table}.csv", mime="text/csv")
-
-# Page Rappels de contrôles
-elif page == "Rappels de contrôles":
-    st.title("🔔 Rappels des contrôles")
-
-    today = datetime.now().date()
-    df = pd.read_sql_query("SELECT * FROM controle_qualite", conn)
+elif menu == "Rappels automatiques":
+    st.header("🔔 Rappels des contrôles qualité")
+    df = pd.read_sql("SELECT * FROM controle_qualite", conn)
     if df.empty:
-        st.warning("⚠️ Aucun contrôle enregistré pour le moment.")
+        st.warning("Aucun contrôle enregistré.")
     else:
         df['date'] = pd.to_datetime(df['date']).dt.date
+        today = datetime.now().date()
 
-        # Fonction pour vérifier si un contrôle est en retard
-        def check_due(df, type_label, freq_days):
-            filt = df[df['type'].str.contains(type_label)]
+        freqs = {
+            "Linéarité": 7,
+            "Uniformité intrinsèque": 7,
+            "Résolution spatiale intrinsèque": 30,
+            "Uniformité système avec collimateur": 7,
+            "Sensibilité": 365,
+            "Résolution énergétique": 365,
+            "Centre de rotation": 180
+        }
+
+        for test, jours in freqs.items():
+            filt = df[df['type'] == test]
             if not filt.empty:
-                last_date = filt['date'].max()
-                delta = (today - last_date).days
-                if delta >= freq_days:
-                    st.warning(f"⏰ Contrôle {type_label.lower()} en retard ({delta} jours depuis le dernier)")
+                last = filt['date'].max()
+                delta = (today - last).days
+                if delta > jours:
+                    st.warning(f"⏰ {test} en retard ({delta} jours)")
                 else:
-                    st.success(f"✅ Contrôle {type_label.lower()} fait il y a {delta} jours")
+                    st.success(f"✅ {test} à jour ({delta} jours)")
             else:
-                st.error(f"❌ Aucun enregistrement pour contrôle {type_label.lower()}")
+                st.error(f"❌ Aucun {test} enregistré")
 
-        check_due(df, "Linéarité", 7)  # Hebdomadaire
-        check_due(df, "Uniformité intrinsèque", 7)  # Hebdomadaire
-        check_due(df, "Uniformité intrinsèque", 30)  # Mensuelle
-        check_due(df, "Résolution spatiale intrinsèque", 30)  # Mensuelle
-        check_due(df, "Uniformité système avec collimateur", 7)  # Hebdomadaire
-        check_due(df, "Uniformité système avec collimateur", 182)  # Semestrielle (~6 mois)
-        check_due(df, "Sensibilité", 365)  # Annuelle
-        check_due(df, "Résolution énergétique", 365)  # Annuelle
-
-        st.info("Les rappels sont basés sur la dernière date enregistrée pour chaque type de contrôle.")
-
-        if st.button("Envoyer un e-mail de rappel"):
-            sujet = "Rappel des contrôles Gamma Caméra"
-            message = (
-                "Bonjour,\n\n"
-                "Ceci est un rappel automatique pour effectuer les contrôles nécessaires sur la gamma caméra.\n\n"
-                "Merci.\n\n"
-                "Cordialement,\n"
-                "Interface de gestion Gamma Caméra"
-            )
-            success = envoyer_email("maryamabia01@gmail.com", sujet, message)
-            if success:
-                st.success("E-mail envoyé avec succès !")
+        if st.button("📧 Envoyer rappel par e-mail"):
+            msg = "Ceci est un rappel automatique pour effectuer les contrôles qualité de la gamma caméra."
+            sent = envoyer_email("maryamabia01@gmail.com", "Rappel des contrôles qualité", msg)
+            if sent:
+                st.success("📨 E-mail envoyé avec succès !")
             else:
                 st.error("Erreur lors de l'envoi de l'e-mail.")
-
-st.markdown('</div>', unsafe_allow_html=True)
