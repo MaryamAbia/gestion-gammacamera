@@ -1,10 +1,3 @@
-Parfait, j'ai compris les modifications. C'est une excellente idée d'utiliser des images plus spécifiques pour illustrer chaque point.
-
-J'ai mis à jour la section "Accueil" avec les nouvelles images que vous avez fournies. J'ai également ajusté légèrement la mise en page pour que les images s'intègrent harmonieusement sous les textes correspondants.
-
-Voici le code complet et finalisé. Il vous suffit de le copier-coller pour voir les changements.
-
-```python
 import streamlit as st
 import sqlite3
 import pandas as pd
