@@ -62,14 +62,14 @@ st.markdown("""
         padding-top: 1rem;
     }
     .sidebar-logo {
-        width: 80px; /* Taille du logo */
+        width: 80px;
         display: block;
-        margin: 0 auto 1rem auto; /* Centrer le logo */
+        margin: 0 auto 1rem auto;
     }
 
     /* --- Titres et Textes --- */
     h1, h2, h3 {
-        color: #0d3d56; /* Bleu foncé */
+        color: #0d3d56;
     }
 
     /* --- Conteneurs et Cartes --- */
@@ -103,14 +103,17 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* --- Images --- */
-    .stImage img {
+    /* --- Images de la page d'accueil --- */
+    .full-width-image img {
         border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
         transition: transform 0.3s ease-in-out;
+        width: 100%; /* L'image prend toute la largeur du conteneur */
+        object-fit: cover; /* Recadre l'image pour remplir l'espace sans la déformer */
+        max-height: 350px; /* Hauteur maximale pour un effet allongé */
     }
-    .stImage img:hover {
-        transform: scale(1.03);
+    .full-width-image img:hover {
+        transform: scale(1.02);
     }
 
     /* --- Pied de page --- */
@@ -183,17 +186,11 @@ if menu == "Accueil":
         La médecine nucléaire est une spécialité médicale utilisant des substances radioactives (radiotraceurs) pour le diagnostic et le traitement. 
         Elle permet de visualiser la fonction des organes de manière non invasive.
         """)
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            st.image(
-                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-akVNwTaQpD1g33J-PHousxTF6slMCmyHOw&s",
-                caption="Imagerie en Médecine Nucléaire"
-             )
-        with col2:
-            st.image(
-                "https://c8.alamy.com/comp/GRBH7G/3d-small-people-radiation-GRBH7G.jpg",
-                caption="Utilisation de radiotraceurs"
-             )
+        st.image(
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-akVNwTaQpD1g33J-PHousxTF6slMCmyHOw&s",
+            use_column_width=True,
+            caption="Visualisation fonctionnelle par imagerie"
+         )
         
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -203,12 +200,13 @@ if menu == "Accueil":
         C'est le dispositif central qui détecte les rayonnements gamma émis par le patient après l'injection du radiotraceur. 
         Elle transforme ces signaux en images fonctionnelles, essentielles pour le diagnostic médical.
         """)
-        st.image(
-            "https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg",
-            caption="Gamma Caméra Siemens Symbia Evo Excel"
+        # Utilisation de la classe CSS personnalisée pour cette image
+        st.markdown(
+            '<div class="full-width-image"><img src="https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg"></div>',
+            unsafe_allow_html=True
          )
 
-# --- AUTRES PAGES ---
+# --- AUTRES PAGES (Code inchangé) ---
 else:
     with main_container:
         st.header(f"📊 {menu}")
