@@ -103,17 +103,20 @@ st.markdown("""
         font-weight: 600;
     }
 
-    /* --- Images de la page d'accueil --- */
-    .full-width-image img {
+    /* --- Images fines et allongées --- */
+    .slim-image img {
         border-radius: 10px;
         box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease-in-out;
-        width: 100%; /* L'image prend toute la largeur du conteneur */
-        object-fit: cover; /* Recadre l'image pour remplir l'espace sans la déformer */
-        max-height: 350px; /* Hauteur maximale pour un effet allongé */
+        width: 100%;
+        object-fit: cover;
+        height: 150px; /* Hauteur fixe pour un effet allongé */
     }
-    .full-width-image img:hover {
-        transform: scale(1.02);
+    
+    /* --- Conteneur pour l'animation 3D --- */
+    .sketchfab-embed-wrapper {
+        border-radius: 12px;
+        overflow: hidden; /* Assure que l'iframe respecte les coins arrondis */
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
     }
 
     /* --- Pied de page --- */
@@ -176,34 +179,44 @@ if menu == "Accueil":
     with main_container:
         st.markdown('<div class="banner"><h1>Interface de Gestion - Gamma Caméra</h1></div>', unsafe_allow_html=True)
         
-        st.markdown("### Bienvenue dans l'outil de suivi pour la maintenance et le contrôle qualité de votre Gamma Caméra.")
-        st.write("Naviguez à travers les différentes sections via le menu latéral pour gérer les utilisateurs, suivre les contrôles, documenter les pannes et bien plus encore.")
+        # --- SECTION D'INTRODUCTION AVEC LE ROBOT ---
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.subheader("Bienvenue dans le futur de la gestion biomédicale")
+            st.write("""
+            Cette plateforme centralise toutes les opérations essentielles pour la maintenance et le contrôle qualité de votre Gamma Caméra. 
+            De la gestion des pannes au suivi des pièces détachées, en passant par l'archivage des documents, tout est conçu pour optimiser votre flux de travail.
+            
+            **Explorez les différentes sections via le menu latéral pour commencer.**
+            """)
+        with col2:
+            st.image("https://png.pngtree.com/png-clipart/20250130/original/pngtree-ai-nurse-revolutionizing-healthcare-png-image_20358481.png" )
+
         st.markdown("---")
 
-        # --- Section 1: Médecine Nucléaire ---
-        st.subheader("🧬 Qu'est-ce que la Médecine Nucléaire ?")
-        st.write("""
-        La médecine nucléaire est une spécialité médicale utilisant des substances radioactives (radiotraceurs) pour le diagnostic et le traitement. 
-        Elle permet de visualiser la fonction des organes de manière non invasive.
-        """)
-        # --- NOUVEAU GIF INTÉGRÉ ICI ---
-        st.image(
-            "https://nuclear-news.net/wp-content/uploads/2010/08/medical-radiation.gif",
-            use_column_width=True
-         )
+        # --- SECTION AVEC ANIMATION 3D ---
+        st.subheader("🔬 Exploration 3D : Au cœur de la matière")
+        st.write("Interagissez avec cette visualisation 3D d'une molécule pour mieux comprendre les principes fondamentaux de la médecine nucléaire. Utilisez votre souris pour faire pivoter, zoomer et explorer.")
         
-        st.markdown("<br>", unsafe_allow_html=True)
+        # Intégration de l'animation 3D via Sketchfab
+        st.markdown("""
+            <div class="sketchfab-embed-wrapper">
+                <iframe title="Caffeine Molecule" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src="https://sketchfab.com/models/d822569a01614642a0711a44b67694f3/embed?autospin=1&autostart=1&ui_theme=dark" style="width: 100%; height: 400px;"></iframe>
+            </div>
+        """, unsafe_allow_html=True )
 
-        # --- Section 2: Gamma Caméra ---
-        st.subheader("📸 La Gamma Caméra")
-        st.write("""
-        C'est le dispositif central qui détecte les rayonnements gamma émis par le patient après l'injection du radiotraceur. 
-        Elle transforme ces signaux en images fonctionnelles, essentielles pour le diagnostic médical.
-        """)
-        st.markdown(
-            '<div class="full-width-image"><img src="https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg"></div>',
-            unsafe_allow_html=True
-         )
+        st.markdown("---")
+
+        # --- SECTION AVEC LES IMAGES FINES ---
+        st.subheader("Concepts Clés en Imagerie")
+        col3, col4 = st.columns(2)
+        with col3:
+            st.markdown("##### Sécurité et Radioprotection")
+            st.markdown('<div class="slim-image"><img src="https://www.ehs.washington.edu/sites/default/files/Radiation-becky-yost_0.png"></div>', unsafe_allow_html=True )
+        with col4:
+            st.markdown("##### Technologie Gamma Caméra")
+            st.markdown('<div class="slim-image"><img src="https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg"></div>', unsafe_allow_html=True )
+
 
 # --- AUTRES PAGES (Code inchangé) ---
 else:
