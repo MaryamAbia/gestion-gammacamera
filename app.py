@@ -1,3 +1,10 @@
+Parfait, j'ai compris les modifications. C'est une excellente idée d'utiliser des images plus spécifiques pour illustrer chaque point.
+
+J'ai mis à jour la section "Accueil" avec les nouvelles images que vous avez fournies. J'ai également ajusté légèrement la mise en page pour que les images s'intègrent harmonieusement sous les textes correspondants.
+
+Voici le code complet et finalisé. Il vous suffit de le copier-coller pour voir les changements.
+
+```python
 import streamlit as st
 import sqlite3
 import pandas as pd
@@ -126,8 +133,6 @@ st.markdown("""
 
 # --- FONCTIONS UTILITAIRES ---
 def envoyer_email(destinataire, sujet, message):
-    # Pour plus de sécurité, il est recommandé d'utiliser les secrets de Streamlit
-    # st.secrets["SENDER_EMAIL"] et st.secrets["APP_PASSWORD"]
     SENDER_EMAIL = "maryamabia14@gmail.com"
     APP_PASSWORD = "wyva itgr vrmu keet"
     
@@ -148,11 +153,10 @@ def envoyer_email(destinataire, sujet, message):
 
 # --- MENU LATÉRAL ---
 with st.sidebar:
-    # --- AJOUT DU LOGO ICI ---
     st.markdown(
         f'<img src="https://fmpm.uca.ma/wp-content/uploads/2024/04/logofm-1.png" class="sidebar-logo">',
         unsafe_allow_html=True
-     )
+    )
     
     st.markdown("## 🧭 Navigation")
     menu = st.radio(
@@ -176,30 +180,40 @@ if menu == "Accueil":
     with main_container:
         st.markdown('<div class="banner"><h1>Interface de Gestion - Gamma Caméra</h1></div>', unsafe_allow_html=True)
         
-        st.markdown("### Bienvenue dans l'outil de suivi complet pour la maintenance et le contrôle qualité de votre Gamma Caméra.")
+        st.markdown("### Bienvenue dans l'outil de suivi pour la maintenance et le contrôle qualité de votre Gamma Caméra.")
         st.write("Naviguez à travers les différentes sections via le menu latéral pour gérer les utilisateurs, suivre les contrôles, documenter les pannes et bien plus encore.")
         st.markdown("---")
 
-        col1, col2 = st.columns(2)
+        # --- Section 1: Médecine Nucléaire ---
+        st.subheader("🧬 Qu'est-ce que la Médecine Nucléaire ?")
+        st.write("""
+        La médecine nucléaire est une spécialité médicale utilisant des substances radioactives (radiotraceurs) pour le diagnostic et le traitement. 
+        Elle permet de visualiser la fonction des organes de manière non invasive.
+        """)
+        col1, col2 = st.columns([1, 1])
         with col1:
-            st.image("https://media.springernature.com/w580h326/nature-cms/uploads/collections/7e9b9309-f848-4071-8004-3dfde0e14fa7/NM_S02_hero.jpg", caption="Imagerie en Médecine Nucléaire" )
+            st.image(
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-akVNwTaQpD1g33J-PHousxTF6slMCmyHOw&s",
+                caption="Imagerie en Médecine Nucléaire"
+            )
         with col2:
-            st.subheader("🧬 Qu'est-ce que la Médecine Nucléaire ?")
-            st.write("""
-            La médecine nucléaire est une spécialité médicale utilisant des substances radioactives pour le diagnostic et le traitement.
-            Elle permet de visualiser la fonction des organes grâce à l'émission de rayonnements gamma captés par une gamma caméra.
-            """)
-
+            st.image(
+                "https://c8.alamy.com/comp/GRBH7G/3d-small-people-radiation-GRBH7G.jpg",
+                caption="Utilisation de radiotraceurs"
+            )
+        
         st.markdown("<br>", unsafe_allow_html=True)
-        col3, col4 = st.columns(2)
-        with col3:
-            st.subheader("📸 La Gamma Caméra")
-            st.write("""
-            Dispositif détectant les rayonnements gamma émis par le patient après injection d’un radio-isotope.
-            Elle fournit des images fonctionnelles essentielles pour le diagnostic médical.
-            """)
-        with col4:
-            st.image("https://www.siemens-healthineers.com/fr-fr/molecular-imaging/gamma-cameras/spect-systems/symbia-evo-excel/images/_jcr_content/root/responsivegrid/image.coreimg.jpeg/1624351381990/symbia-evo-teaser.jpeg", caption="Gamma Caméra moderne" )
+
+        # --- Section 2: Gamma Caméra ---
+        st.subheader("📸 La Gamma Caméra")
+        st.write("""
+        C'est le dispositif central qui détecte les rayonnements gamma émis par le patient après l'injection du radiotraceur. 
+        Elle transforme ces signaux en images fonctionnelles, essentielles pour le diagnostic médical.
+        """)
+        st.image(
+            "https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg",
+            caption="Gamma Caméra Siemens Symbia Evo Excel"
+        )
 
 # --- AUTRES PAGES ---
 else:
@@ -224,8 +238,6 @@ else:
             st.subheader("Liste des utilisateurs")
             df_users = pd.read_sql("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
             st.dataframe(df_users, use_container_width=True)
-            # L'édition directe via st.data_editor nécessite une logique de sauvegarde plus complexe.
-            # st.dataframe est plus simple pour l'affichage.
 
         elif menu == "Contrôle Qualité":
             intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
@@ -337,7 +349,6 @@ else:
             st.subheader("Liste des documents")
             df_docs = pd.read_sql("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
             st.dataframe(df_docs, use_container_width=True)
-            # La logique de téléchargement peut être ajoutée ici si nécessaire
 
         elif menu == "Statistiques":
             df_cq = pd.read_sql("SELECT * FROM controle_qualite", conn)
@@ -347,11 +358,9 @@ else:
                 st.subheader("Analyse des Contrôles Qualité")
                 df_cq['date'] = pd.to_datetime(df_cq['date'])
                 
-                # Graphique 1: Nombre de contrôles par type
                 fig1 = px.pie(df_cq, names='type', title='Répartition des contrôles par type')
                 st.plotly_chart(fig1, use_container_width=True)
 
-                # Graphique 2: Nombre de contrôles par mois
                 df_cq['mois'] = df_cq['date'].dt.to_period("M").astype(str)
                 count_by_month = df_cq.groupby('mois').size().reset_index(name='nombre')
                 fig2 = px.bar(count_by_month, x='mois', y='nombre', title='Nombre de contrôles effectués par mois', labels={'mois': 'Mois', 'nombre': 'Nombre de contrôles'})
@@ -368,7 +377,6 @@ else:
                     if dest and sujet and message:
                         if envoyer_email(dest, sujet, message):
                             st.success(f"Email envoyé avec succès à {dest}.")
-                        # L'erreur est gérée dans la fonction envoyer_email
                     else:
                         st.error("Veuillez remplir tous les champs.")
 
@@ -377,3 +385,4 @@ st.markdown(
     '<div class="footer">&copy; 2025 Maryam Abia – Tous droits réservés</div>',
     unsafe_allow_html=True
 )
+```
