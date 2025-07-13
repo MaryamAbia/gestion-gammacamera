@@ -149,7 +149,7 @@ with st.sidebar:
     st.markdown(
         f'<img src="https://fmpm.uca.ma/wp-content/uploads/2024/04/logofm-1.png" class="sidebar-logo">',
         unsafe_allow_html=True
-    )
+     )
     
     st.markdown("## 🧭 Navigation")
     menu = st.radio(
@@ -188,12 +188,12 @@ if menu == "Accueil":
             st.image(
                 "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-akVNwTaQpD1g33J-PHousxTF6slMCmyHOw&s",
                 caption="Imagerie en Médecine Nucléaire"
-            )
+             )
         with col2:
             st.image(
                 "https://c8.alamy.com/comp/GRBH7G/3d-small-people-radiation-GRBH7G.jpg",
                 caption="Utilisation de radiotraceurs"
-            )
+             )
         
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -206,7 +206,7 @@ if menu == "Accueil":
         st.image(
             "https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg",
             caption="Gamma Caméra Siemens Symbia Evo Excel"
-        )
+         )
 
 # --- AUTRES PAGES ---
 else:
