@@ -111,13 +111,6 @@ st.markdown("""
         object-fit: cover;
         height: 150px; /* Hauteur fixe pour un effet allongé */
     }
-    
-    /* --- Conteneur pour l'animation 3D --- */
-    .sketchfab-embed-wrapper {
-        border-radius: 12px;
-        overflow: hidden; /* Assure que l'iframe respecte les coins arrondis */
-        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-    }
 
     /* --- Pied de page --- */
     .footer {
@@ -194,31 +187,20 @@ if menu == "Accueil":
 
         st.markdown("---")
 
-        # --- SECTION AVEC ANIMATION 3D ---
-        st.subheader("🔬 Exploration 3D : Au cœur de la matière")
-        st.write("Interagissez avec cette visualisation 3D d'une molécule pour mieux comprendre les principes fondamentaux de la médecine nucléaire. Utilisez votre souris pour faire pivoter, zoomer et explorer.")
-        
-        # Intégration de l'animation 3D via Sketchfab
-        st.markdown("""
-            <div class="sketchfab-embed-wrapper">
-                <iframe title="Caffeine Molecule" frameborder="0" allowfullscreen mozallowfullscreen="true" webkitallowfullscreen="true" allow="autoplay; fullscreen; xr-spatial-tracking" xr-spatial-tracking execution-while-out-of-viewport execution-while-not-rendered web-share src="https://sketchfab.com/models/d822569a01614642a0711a44b67694f3/embed?autospin=1&autostart=1&ui_theme=dark" style="width: 100%; height: 400px;"></iframe>
-            </div>
-        """, unsafe_allow_html=True )
-
-        st.markdown("---")
-
-        # --- SECTION AVEC LES IMAGES FINES ---
-        st.subheader("Concepts Clés en Imagerie")
+        # --- SECTION AVEC LES CONCEPTS CLÉS ---
+        st.subheader("Concepts Clés en Médecine Nucléaire")
         col3, col4 = st.columns(2)
         with col3:
-            st.markdown("##### Sécurité et Radioprotection")
+            st.markdown("##### Radiotraceurs et Sécurité")
+            st.write("Les radiotraceurs, comme le Technétium-99m, sont des substances radioactives qui, une fois injectées, se fixent sur un organe cible. Leur gestion sécurisée est primordiale.")
             st.markdown('<div class="slim-image"><img src="https://www.ehs.washington.edu/sites/default/files/Radiation-becky-yost_0.png"></div>', unsafe_allow_html=True )
         with col4:
             st.markdown("##### Technologie Gamma Caméra")
+            st.write("La gamma caméra est un détecteur qui capte les rayonnements gamma émis par les radiotraceurs pour créer une image fonctionnelle (scintigraphie) de l'organe étudié.")
             st.markdown('<div class="slim-image"><img src="https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg"></div>', unsafe_allow_html=True )
 
 
-# --- AUTRES PAGES (Code inchangé) ---
+# --- AUTRES PAGES ---
 else:
     with main_container:
         st.header(f"📊 {menu}")
