@@ -186,10 +186,10 @@ if menu == "Accueil":
         La médecine nucléaire est une spécialité médicale utilisant des substances radioactives (radiotraceurs) pour le diagnostic et le traitement. 
         Elle permet de visualiser la fonction des organes de manière non invasive.
         """)
+        # --- NOUVEAU GIF INTÉGRÉ ICI ---
         st.image(
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-akVNwTaQpD1g33J-PHousxTF6slMCmyHOw&s",
-            use_column_width=True,
-            caption="Visualisation fonctionnelle par imagerie"
+            "https://nuclear-news.net/wp-content/uploads/2010/08/medical-radiation.gif",
+            use_column_width=True
          )
         
         st.markdown("<br>", unsafe_allow_html=True)
@@ -200,7 +200,6 @@ if menu == "Accueil":
         C'est le dispositif central qui détecte les rayonnements gamma émis par le patient après l'injection du radiotraceur. 
         Elle transforme ces signaux en images fonctionnelles, essentielles pour le diagnostic médical.
         """)
-        # Utilisation de la classe CSS personnalisée pour cette image
         st.markdown(
             '<div class="full-width-image"><img src="https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg"></div>',
             unsafe_allow_html=True
