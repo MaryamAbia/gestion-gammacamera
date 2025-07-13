@@ -42,8 +42,8 @@ def create_tables():
     )''')
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS documents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, type TEXT, fichier BLOB
-    )''')
+        id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, type TEXT, fichier BLOB, nom_fichier_original TEXT
+    )''') # J'ai ajouté nom_fichier_original pour une meilleure gestion
     conn.commit()
 
 create_tables()
@@ -172,7 +172,6 @@ if menu == "Accueil":
     with main_container:
         st.markdown('<div class="banner"><h1>Interface de Gestion - Gamma Caméra</h1></div>', unsafe_allow_html=True)
         
-        # --- SECTION D'INTRODUCTION AVEC LE ROBOT ---
         col1, col2 = st.columns([2, 1])
         with col1:
             st.subheader("Bienvenue dans le futur de la gestion biomédicale")
@@ -187,7 +186,6 @@ if menu == "Accueil":
 
         st.markdown("---")
 
-        # --- SECTION AVEC LES CONCEPTS CLÉS ---
         st.subheader("Concepts Clés en Médecine Nucléaire")
         col3, col4 = st.columns(2)
         with col3:
@@ -198,7 +196,6 @@ if menu == "Accueil":
             st.markdown("##### Technologie Gamma Caméra")
             st.write("La gamma caméra est un détecteur qui capte les rayonnements gamma émis par les radiotraceurs pour créer une image fonctionnelle (scintigraphie) de l'organe étudié.")
             st.markdown('<div class="slim-image"><img src="https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg"></div>', unsafe_allow_html=True )
-
 
 # --- AUTRES PAGES ---
 else:
@@ -314,6 +311,7 @@ else:
             df_pieces = pd.read_sql("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
             st.dataframe(df_pieces, use_container_width=True)
 
+        # --- SECTION DOCUMENTS MODIFIÉE ---
         elif menu == "Documents":
             with st.expander("➕ Ajouter un nouveau document"):
                 with st.form("new_doc_form", clear_on_submit=True):
@@ -323,17 +321,48 @@ else:
                     submitted = st.form_submit_button("Ajouter le document")
                     if submitted and fichier and nom_doc:
                         blob = fichier.read()
-                        cursor.execute("INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)", (nom_doc, type_doc, blob))
+                        nom_original = fichier.name
+                        cursor.execute("INSERT INTO documents (nom, type, fichier, nom_fichier_original) VALUES (?, ?, ?, ?)", (nom_doc, type_doc, blob, nom_original))
                         conn.commit()
-                        st.success("Document ajouté.")
+                        st.success(f"Document '{nom_doc}' ajouté.")
                         st.rerun()
                     elif submitted:
                         st.error("Veuillez renseigner un nom et choisir un fichier.")
 
             st.markdown("---")
             st.subheader("Liste des documents")
-            df_docs = pd.read_sql("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
-            st.dataframe(df_docs, use_container_width=True)
+            
+            # Récupérer tous les documents de la base de données
+            cursor.execute("SELECT id, nom, type, fichier, nom_fichier_original FROM documents ORDER BY id DESC")
+            documents = cursor.fetchall()
+
+            if not documents:
+                st.info("Aucun document n'a été ajouté pour le moment.")
+            else:
+                # Créer des colonnes pour un affichage propre
+                col1, col2, col3 = st.columns([2, 1, 1])
+                col1.write("**Nom du Document**")
+                col2.write("**Type**")
+                col3.write("**Action**")
+                st.markdown("---")
+
+                # Afficher chaque document avec un bouton de téléchargement
+                for doc in documents:
+                    doc_id, doc_nom, doc_type, doc_fichier, doc_nom_original = doc
+                    
+                    col1, col2, col3 = st.columns([2, 1, 1])
+                    with col1:
+                        st.write(doc_nom)
+                    with col2:
+                        st.write(doc_type)
+                    with col3:
+                        st.download_button(
+                            label="📥 Télécharger",
+                            data=doc_fichier,
+                            file_name=doc_nom_original, # Utilise le nom de fichier original
+                            key=f"download_{doc_id}" # Clé unique pour chaque bouton
+                        )
+                st.markdown("---")
 
         elif menu == "Statistiques":
             df_cq = pd.read_sql("SELECT * FROM controle_qualite", conn)
