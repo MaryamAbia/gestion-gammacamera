@@ -7,407 +7,373 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# Config page
-st.set_page_config(page_title="Gestion Gamma Caméra", layout="wide")
+# --- CONFIGURATION DE LA PAGE ---
+st.set_page_config(
+    page_title="Gestion Gamma Caméra",
+    page_icon="🔬",
+    layout="wide"
+)
 
-# Connexion DB
-conn = sqlite3.connect("gamma_camera.db", check_same_thread=False)
+# --- CONNEXION À LA BASE DE DONNÉES ---
+@st.cache_resource
+def init_connection():
+    return sqlite3.connect("gamma_camera.db", check_same_thread=False)
+
+conn = init_connection()
 cursor = conn.cursor()
 
-# Création tables
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS utilisateurs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT,
-    role TEXT
-)
-''')
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS controle_qualite (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT,
-    type TEXT,
-    test TEXT,
-    intervenant TEXT,
-    resultat TEXT
-)
-''')
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS pannes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    date TEXT,
-    description TEXT,
-    intervenant TEXT,
-    action TEXT
-)
-''')
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS pieces_detachees (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT,
-    ref TEXT,
-    date_commande TEXT,
-    fournisseur TEXT,
-    date_reception TEXT
-)
-''')
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS documents (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT,
-    type TEXT,
-    fichier BLOB
-)
-''')
-conn.commit()
+# --- CRÉATION DES TABLES (si elles n'existent pas) ---
+def create_tables():
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS utilisateurs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, role TEXT
+    )''')
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS controle_qualite (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, type TEXT, test TEXT, intervenant TEXT, resultat TEXT
+    )''')
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS pannes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, description TEXT, intervenant TEXT, action TEXT
+    )''')
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS pieces_detachees (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, ref TEXT, date_commande TEXT, fournisseur TEXT, date_reception TEXT
+    )''')
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS documents (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, type TEXT, fichier BLOB
+    )''')
+    conn.commit()
 
-# === Configuration email (intégrée depuis ton code ancien) ===
-SENDER_EMAIL = "maryamabia14@gmail.com"
-APP_PASSWORD = "wyva itgr vrmu keet"  # Remplace par ton vrai password app Gmail
+create_tables()
 
+# --- STYLE CSS PERSONNALISÉ ---
+st.markdown("""
+<style>
+    /* --- Général --- */
+    .stApp {
+        background-color: #f0f2f6;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    /* --- Logo dans la barre latérale --- */
+    [data-testid="stSidebar"] {
+        padding-top: 1rem;
+    }
+    .sidebar-logo {
+        width: 80px; /* Taille du logo */
+        display: block;
+        margin: 0 auto 1rem auto; /* Centrer le logo */
+    }
+
+    /* --- Titres et Textes --- */
+    h1, h2, h3 {
+        color: #0d3d56; /* Bleu foncé */
+    }
+
+    /* --- Conteneurs et Cartes --- */
+    .main-container {
+        padding: 2rem;
+    }
+    .card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+        border: 1px solid #e0e0e0;
+    }
+    .stExpander {
+        border-radius: 8px !important;
+        border: 1px solid #e0e0e0 !important;
+    }
+
+    /* --- Bannière --- */
+    .banner {
+        padding: 3rem;
+        background: linear-gradient(135deg, #0d3d56 0%, #1a6a9c 100%);
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .banner h1 {
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 600;
+    }
+
+    /* --- Images --- */
+    .stImage img {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease-in-out;
+    }
+    .stImage img:hover {
+        transform: scale(1.03);
+    }
+
+    /* --- Pied de page --- */
+    .footer {
+        text-align: center;
+        padding: 20px;
+        margin-top: 40px;
+        color: #666;
+        font-size: 0.9rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# --- FONCTIONS UTILITAIRES ---
 def envoyer_email(destinataire, sujet, message):
+    # Pour plus de sécurité, il est recommandé d'utiliser les secrets de Streamlit
+    # st.secrets["SENDER_EMAIL"] et st.secrets["APP_PASSWORD"]
+    SENDER_EMAIL = "maryamabia14@gmail.com"
+    APP_PASSWORD = "wyva itgr vrmu keet"
+    
     msg = MIMEMultipart()
     msg["From"] = SENDER_EMAIL
     msg["To"] = destinataire
     msg["Subject"] = sujet
     msg.attach(MIMEText(message, "plain"))
+    
     try:
-        server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
-        server.login(SENDER_EMAIL, APP_PASSWORD)
-        server.sendmail(SENDER_EMAIL, destinataire, msg.as_string())
-        server.quit()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(SENDER_EMAIL, APP_PASSWORD)
+            server.sendmail(SENDER_EMAIL, destinataire, msg.as_string())
         return True
     except Exception as e:
-        st.error(f"Erreur email : {e}")
+        st.error(f"Erreur lors de l'envoi de l'email : {e}")
         return False
 
-# === CSS Styling ===
-st.markdown("""
-<style>
-    .stApp { font-family: 'Segoe UI', sans-serif; background-color: #f4f6fa; }
-    .banner {
-        width: 100%; height: 200px; margin-bottom: 20px; position: relative;
-        background: url('https://img.freepik.com/premium-photo/chemical-molecule-with-blue-background-3d-rendering_772449-4288.jpg') no-repeat center;
-        background-size: cover; display: flex; align-items: center; justify-content: center;
-        border-radius: 12px;
-    }
-    .banner h1 {
-        background-color: rgba(255,255,255,0.9); padding: 20px 40px; border-radius: 8px;
-        color: #003366; font-size: 36px;
-    }
-    .section-title {
-        font-size: 26px; margin-top: 30px; color: #002244;
-    }
-    .divider {
-        height: 2px; background-color: #ccc; margin: 20px 0;
-    }
-    .img-block {
-        width: 100%; border-radius: 10px; margin-top: 10px;
-    }
-    .footer {
-        margin-top: 50px; font-size: 14px; color: #555; text-align: center;
-    }
-    .btn-del {
-        background-color: #ff4b4b; color: white; border-radius: 6px; padding: 6px 12px;
-        border: none; cursor: pointer; margin-left: 10px;
-    }
-</style>
-""", unsafe_allow_html=True)
+# --- MENU LATÉRAL ---
+with st.sidebar:
+    # --- AJOUT DU LOGO ICI ---
+    st.markdown(
+        f'<img src="https://fmpm.uca.ma/wp-content/uploads/2024/04/logofm-1.png" class="sidebar-logo">',
+        unsafe_allow_html=True
+     )
+    
+    st.markdown("## 🧭 Navigation")
+    menu = st.radio(
+        "Choisissez une section :",
+        [
+            "Accueil", "Utilisateurs", "Contrôle Qualité", "Types de Tests",
+            "Pannes", "Pièces Détachées", "Documents", "Statistiques", "Rappels"
+        ],
+        captions=[
+            "Page de bienvenue", "Gérer les intervenants", "Suivi des tests", "Infos sur les tests",
+            "Historique des pannes", "Gestion du stock", "Manuels et rapports", "Visualisation des données", "Envoyer des alertes"
+        ]
+    )
+    st.markdown("---")
+    st.info("**Développé par Maryam Abia**\n\nMaster Instrumentation et Analyse Biomédicale")
 
-# Bandeau principal
-st.markdown("""
-<div class="banner">
-    <h1>Interface de Gestion - Gamma Caméra</h1>
-</div>
-""", unsafe_allow_html=True)
+# --- CORPS PRINCIPAL DE L'APPLICATION ---
+main_container = st.container()
 
-# Menu latéral
-menu = st.sidebar.selectbox("Navigation", [
-    "Accueil",
-    "Utilisateurs",
-    "Contrôle Qualité",
-    "Types de Tests",
-    "Pannes",
-    "Pièces Détachées",
-    "Documents",
-    "Statistiques",
-    "Rappels"
-])
-
-# --- Page Accueil ---
 if menu == "Accueil":
-    st.subheader("Bienvenue dans l'interface de gestion Gamma Caméra")
+    with main_container:
+        st.markdown('<div class="banner"><h1>Interface de Gestion - Gamma Caméra</h1></div>', unsafe_allow_html=True)
+        
+        st.markdown("### Bienvenue dans l'outil de suivi complet pour la maintenance et le contrôle qualité de votre Gamma Caméra.")
+        st.write("Naviguez à travers les différentes sections via le menu latéral pour gérer les utilisateurs, suivre les contrôles, documenter les pannes et bien plus encore.")
+        st.markdown("---")
 
-    st.markdown("""
-    ### 🧬 Qu'est-ce que la Médecine Nucléaire ?
-    La médecine nucléaire est une spécialité médicale utilisant des substances radioactives pour le diagnostic et le traitement.
-    Elle permet de visualiser la fonction des organes grâce à l'émission de rayonnements gamma captés par une gamma caméra.
-    """)
-    st.image("https://media.springernature.com/w580h326/nature-cms/uploads/collections/7e9b9309-f848-4071-8004-3dfde0e14fa7/NM_S02_hero.jpg", use_column_width=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.image("https://media.springernature.com/w580h326/nature-cms/uploads/collections/7e9b9309-f848-4071-8004-3dfde0e14fa7/NM_S02_hero.jpg", caption="Imagerie en Médecine Nucléaire" )
+        with col2:
+            st.subheader("🧬 Qu'est-ce que la Médecine Nucléaire ?")
+            st.write("""
+            La médecine nucléaire est une spécialité médicale utilisant des substances radioactives pour le diagnostic et le traitement.
+            Elle permet de visualiser la fonction des organes grâce à l'émission de rayonnements gamma captés par une gamma caméra.
+            """)
 
-    st.markdown("""
-    ### 📸 La Gamma Caméra
-    Dispositif détectant les rayonnements gamma émis par le patient après injection d’un radio-isotope.
-    Elle fournit des images fonctionnelles essentielles pour le diagnostic médical.
-    """)
-    st.image("https://www.siemens-healthineers.com/fr-fr/molecular-imaging/gamma-cameras/spect-systems/symbia-evo-excel/images/_jcr_content/root/responsivegrid/image.coreimg.jpeg/1624351381990/symbia-evo-teaser.jpeg", use_column_width=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        col3, col4 = st.columns(2)
+        with col3:
+            st.subheader("📸 La Gamma Caméra")
+            st.write("""
+            Dispositif détectant les rayonnements gamma émis par le patient après injection d’un radio-isotope.
+            Elle fournit des images fonctionnelles essentielles pour le diagnostic médical.
+            """)
+        with col4:
+            st.image("https://www.siemens-healthineers.com/fr-fr/molecular-imaging/gamma-cameras/spect-systems/symbia-evo-excel/images/_jcr_content/root/responsivegrid/image.coreimg.jpeg/1624351381990/symbia-evo-teaser.jpeg", caption="Gamma Caméra moderne" )
 
-    st.markdown("""
-    ### 🧪 Le Contrôle de Qualité
-    Garantit la fiabilité des images par plusieurs tests (uniformité, résolution, linéarité...).
-    Ce suivi assure des performances optimales et la sécurité du patient.
-    """)
-    st.image("https://img.freepik.com/free-photo/medical-technologist-checking-machine-hospital-laboratory_342744-1310.jpg", use_column_width=True)
+# --- AUTRES PAGES ---
+else:
+    with main_container:
+        st.header(f"📊 {menu}")
 
-    st.markdown("---")
-    st.markdown("**Développée par Maryam Abia – Master Instrumentation et Analyse Biomédicale**")
+        if menu == "Utilisateurs":
+            with st.expander("➕ Ajouter un nouvel utilisateur"):
+                with st.form("new_user_form", clear_on_submit=True):
+                    nom = st.text_input("Nom complet")
+                    role = st.selectbox("Rôle", ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"])
+                    submitted = st.form_submit_button("Ajouter l'utilisateur")
+                    if submitted and nom.strip() != "":
+                        cursor.execute("INSERT INTO utilisateurs (nom, role) VALUES (?, ?)", (nom.strip(), role))
+                        conn.commit()
+                        st.success(f"Utilisateur '{nom}' ajouté.")
+                        st.rerun()
+                    elif submitted:
+                        st.error("Le nom ne peut pas être vide.")
 
-# --- Page Utilisateurs ---
-elif menu == "Utilisateurs":
-    st.header("Gestion des Utilisateurs")
+            st.markdown("---")
+            st.subheader("Liste des utilisateurs")
+            df_users = pd.read_sql("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
+            st.dataframe(df_users, use_container_width=True)
+            # L'édition directe via st.data_editor nécessite une logique de sauvegarde plus complexe.
+            # st.dataframe est plus simple pour l'affichage.
 
-    with st.expander("Ajouter un nouvel utilisateur"):
-        nom = st.text_input("Nom complet", key="nom_utilisateur")
-        role = st.selectbox("Rôle", ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"], key="role_utilisateur")
-        if st.button("Ajouter", key="btn_ajouter_utilisateur"):
-            if nom.strip() == "":
-                st.error("Le nom ne peut pas être vide.")
+        elif menu == "Contrôle Qualité":
+            intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
+            if not intervenants:
+                st.warning("Veuillez d'abord ajouter des utilisateurs dans la section 'Utilisateurs'.")
             else:
-                cursor.execute("INSERT INTO utilisateurs (nom, role) VALUES (?, ?)", (nom.strip(), role))
-                conn.commit()
-                st.success(f"Utilisateur '{nom}' ajouté.")
+                with st.expander("➕ Ajouter un nouveau contrôle"):
+                    with st.form("new_cq_form", clear_on_submit=True):
+                        date_cq = st.date_input("Date du contrôle", datetime.now())
+                        type_cq = st.selectbox("Type de contrôle", ["Journalier", "Hebdomadaire", "Mensuel", "Annuel"])
+                        test_cq = st.text_input("Test effectué")
+                        intervenant_cq = st.selectbox("Intervenant", intervenants)
+                        resultat_cq = st.text_area("Résultat / Observation")
+                        submitted = st.form_submit_button("Ajouter le contrôle")
+                        if submitted:
+                            cursor.execute(
+                                "INSERT INTO controle_qualite (date, type, test, intervenant, resultat) VALUES (?, ?, ?, ?, ?)",
+                                (date_cq.strftime('%Y-%m-%d'), type_cq, test_cq, intervenant_cq, resultat_cq)
+                            )
+                            conn.commit()
+                            st.success("Contrôle ajouté avec succès.")
+                            st.rerun()
+                
+                st.markdown("---")
+                st.subheader("Historique des contrôles")
+                df_cq = pd.read_sql("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
+                st.dataframe(df_cq, use_container_width=True)
 
-    st.markdown("---")
-    st.subheader("Liste des utilisateurs")
-    df_users = pd.read_sql("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
-    edited_users = st.data_editor(df_users, num_rows="dynamic", use_container_width=True)
-
-    if st.button("Enregistrer les modifications utilisateurs"):
-        for i, row in edited_users.iterrows():
-            cursor.execute("UPDATE utilisateurs SET nom = ?, role = ? WHERE id = ?", (row['nom'], row['role'], row['id']))
-        conn.commit()
-        st.success("Modifications enregistrées.")
-
-# --- Page Contrôle Qualité ---
-elif menu == "Contrôle Qualité":
-    st.header("Suivi des Contrôles Qualité")
-
-    intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
-    if not intervenants:
-        st.warning("Ajoutez des utilisateurs/intervenants dans la page 'Utilisateurs' avant de continuer.")
-    else:
-        with st.expander("Ajouter un nouveau contrôle"):
-            date_cq = st.date_input("Date du contrôle", datetime.now())
-            type_cq = st.selectbox("Type de contrôle", [
-                "Journalier: Résolution",
-                "Hebdomadaire: Stabilisé",
-                "Mensuel: Linéarité",
-                "Annuel: Complèt"
-            ])
-            tests_possibles = {
-                "Journalier: Résolution": ["Résolution spatiale intrinsèque", "Uniformité intrinsèque"],
-                "Hebdomadaire: Stabilisé": ["Uniformité extrinsèque", "Test de sensibilité"],
-                "Mensuel: Linéarité": ["Test de linéarité", "Uniformité du système avec collimateur"],
-                "Annuel: Complèt": ["Test complet annuel", "Mesure résolution énergétique"]
+        elif menu == "Types de Tests":
+            tests_info = {
+                "Test de linéarité": "S'assure que la caméra restitue les formes sans distorsion.",
+                "Test d’uniformité intrinsèque": "Vérifie la production d'une image homogène à partir d’une source uniforme.",
+                "Test de résolution spatiale intrinsèque": "Évalue la capacité à distinguer les détails fins sans collimateur.",
+                "Test d’uniformité du système avec collimateur": "Vérifie l’homogénéité de l’image avec le collimateur.",
+                "Test de sensibilité": "Évalue la réponse du système à un radionucléide d’activité connue.",
+                "Mesure de la résolution énergétique (RE)": "Mesure la capacité à distinguer les photons d'énergies proches."
             }
-            test_cq = st.selectbox("Test effectué", tests_possibles[type_cq])
-            intervenant_cq = st.selectbox("Intervenant", intervenants)
-            resultat_cq = st.text_area("Résultat / Observation")
+            
+            for i, (nom_test, description) in enumerate(tests_info.items()):
+                with st.container():
+                    st.markdown(f'<div class="card"><h3>{nom_test}</h3><p>{description}</p></div>', unsafe_allow_html=True)
 
-            if st.button("Ajouter contrôle"):
-                cursor.execute(
-                    "INSERT INTO controle_qualite (date, type, test, intervenant, resultat) VALUES (?, ?, ?, ?, ?)",
-                    (date_cq.strftime('%Y-%m-%d'), type_cq, test_cq, intervenant_cq, resultat_cq)
-                )
-                conn.commit()
-                st.success("Contrôle ajouté.")
-
-        st.markdown("---")
-        st.subheader("Historique des contrôles")
-        df_cq = pd.read_sql("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
-        edited_cq = st.data_editor(df_cq, num_rows="dynamic", use_container_width=True)
-
-        if st.button("Enregistrer modifications contrôles"):
-            for i, row in edited_cq.iterrows():
-                cursor.execute(
-                    "UPDATE controle_qualite SET date = ?, type = ?, test = ?, intervenant = ?, resultat = ? WHERE id = ?",
-                    (row['date'], row['type'], row['test'], row['intervenant'], row['resultat'], row['id'])
-                )
-            conn.commit()
-            st.success("Modifications sauvegardées.")
-
-# --- Page Types de Tests ---
-elif menu == "Types de Tests":
-    st.header("Descriptions des Tests de Contrôle Qualité")
-
-    tests_info = {
-        "Test de linéarité": """
-        Le test de linéarité est un contrôle de routine hebdomadaire, complété par une vérification quantitative semestrielle.
-        Il permet de s’assurer que la gamma caméra restitue correctement les formes sans distorsion.
-        """,
-        "Test d’uniformité intrinsèque": """
-        Vérifie la capacité de la gamma caméra à produire une image homogène à partir d’une source uniforme.
-        Test de réception, puis effectué hebdomadairement (10 × 10⁶ coups) et mensuellement (200 × 10⁶ coups).
-        """,
-        "Test de résolution spatiale intrinsèque": """
-        Évalue la capacité de la gamma caméra à distinguer les détails fins sans collimateur.
-        Test de réception, ensuite réalisé mensuellement.
-        """,
-        "Test d’uniformité du système avec collimateur": """
-        Vérifie l’homogénéité de l’image produite avec collimateur.
-        Test initial de référence, puis répété hebdomadairement (contrôle visuel) et semestriellement (contrôle visuel et quantitatif).
-        """,
-        "Test de sensibilité": """
-        Évalue la réponse du système à un radionucléide d’activité connue.
-        Contrôle effectué à la réception comme test de référence, puis annuellement.
-        """,
-        "Mesure de la résolution énergétique (RE)": """
-        Réalisée avec la même source que le test de sensibilité.
-        Mesure la largeur à mi-hauteur (LMH) du pic photoélectrique.
-        Valeur typique d’environ 10 % à 140 keV, indiquant la capacité à distinguer les photons proches en énergie.
-        """
-    }
-
-    for nom_test, description in tests_info.items():
-        st.subheader(nom_test)
-        st.write(description)
-        st.image("https://img.freepik.com/free-photo/technology-background-with-glowing-particles_1048-8033.jpg?w=740&t=st=1689288281~exp=1689288881~hmac=8e9241f9aa3eecb8a5e57e746e2491adce3a99b3b4d909c405a6a2d974d7b1c4", width=600)
-        st.markdown("---")
-
-# --- Page Pannes ---
-elif menu == "Pannes":
-    st.header("Suivi des Pannes")
-
-    intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
-    if not intervenants:
-        st.warning("Ajoutez des utilisateurs dans la page 'Utilisateurs' avant de continuer.")
-    else:
-        with st.expander("Ajouter une nouvelle panne"):
-            date_panne = st.date_input("Date de la panne", datetime.now())
-            desc = st.text_area("Description")
-            intervenant_panne = st.selectbox("Intervenant", intervenants)
-            action = st.text_area("Action réalisée")
-
-            if st.button("Ajouter panne"):
-                cursor.execute(
-                    "INSERT INTO pannes (date, description, intervenant, action) VALUES (?, ?, ?, ?)",
-                    (date_panne.strftime('%Y-%m-%d'), desc, intervenant_panne, action)
-                )
-                conn.commit()
-                st.success("Panne ajoutée.")
-
-        st.markdown("---")
-        st.subheader("Historique des pannes")
-        df_pannes = pd.read_sql("SELECT * FROM pannes ORDER BY date DESC", conn)
-        edited_pannes = st.data_editor(df_pannes, num_rows="dynamic", use_container_width=True)
-
-        if st.button("Enregistrer modifications pannes"):
-            for i, row in edited_pannes.iterrows():
-                cursor.execute(
-                    "UPDATE pannes SET date = ?, description = ?, intervenant = ?, action = ? WHERE id = ?",
-                    (row['date'], row['description'], row['intervenant'], row['action'], row['id'])
-                )
-            conn.commit()
-            st.success("Modifications sauvegardées.")
-
-# --- Page Pièces Détachées ---
-elif menu == "Pièces Détachées":
-    st.header("Gestion des Pièces Détachées")
-
-    with st.expander("Ajouter une nouvelle pièce"):
-        nom_piece = st.text_input("Nom de la pièce")
-        ref_piece = st.text_input("Référence")
-        date_cmd = st.date_input("Date de commande")
-        fournisseur = st.text_input("Fournisseur")
-        date_rec = st.date_input("Date de réception")
-
-        if st.button("Ajouter la pièce"):
-            cursor.execute(
-                "INSERT INTO pieces_detachees (nom, ref, date_commande, fournisseur, date_reception) VALUES (?, ?, ?, ?, ?)",
-                (nom_piece, ref_piece, date_cmd.strftime('%Y-%m-%d'), fournisseur, date_rec.strftime('%Y-%m-%d'))
-            )
-            conn.commit()
-            st.success("Pièce ajoutée.")
-
-    st.markdown("---")
-    st.subheader("Liste des pièces")
-    df_pieces = pd.read_sql("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
-    edited_pieces = st.data_editor(df_pieces, num_rows="dynamic", use_container_width=True)
-
-    if st.button("Enregistrer modifications pièces"):
-        for i, row in edited_pieces.iterrows():
-            cursor.execute(
-                "UPDATE pieces_detachees SET nom = ?, ref = ?, date_commande = ?, fournisseur = ?, date_reception = ? WHERE id = ?",
-                (row['nom'], row['ref'], row['date_commande'], row['fournisseur'], row['date_reception'], row['id'])
-            )
-        conn.commit()
-        st.success("Modifications sauvegardées.")
-
-# --- Page Documents ---
-elif menu == "Documents":
-    st.header("Gestion des Documents")
-
-    with st.expander("Ajouter un document"):
-        nom_doc = st.text_input("Nom du document")
-        type_doc = st.selectbox("Type de document", ["Manuel", "Procédure", "Rapport", "Autre"])
-        fichier = st.file_uploader("Charger le fichier")
-
-        if st.button("Ajouter document"):
-            if fichier is not None and nom_doc.strip() != "":
-                blob = fichier.read()
-                cursor.execute(
-                    "INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)",
-                    (nom_doc.strip(), type_doc, blob)
-                )
-                conn.commit()
-                st.success("Document ajouté.")
+        elif menu == "Pannes":
+            intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
+            if not intervenants:
+                st.warning("Veuillez d'abord ajouter des utilisateurs.")
             else:
-                st.error("Veuillez renseigner un nom et choisir un fichier.")
+                with st.expander("➕ Ajouter une nouvelle panne"):
+                    with st.form("new_panne_form", clear_on_submit=True):
+                        date_panne = st.date_input("Date de la panne", datetime.now())
+                        desc = st.text_area("Description de la panne")
+                        intervenant_panne = st.selectbox("Intervenant", intervenants)
+                        action = st.text_area("Action corrective réalisée")
+                        submitted = st.form_submit_button("Ajouter la panne")
+                        if submitted:
+                            cursor.execute(
+                                "INSERT INTO pannes (date, description, intervenant, action) VALUES (?, ?, ?, ?)",
+                                (date_panne.strftime('%Y-%m-%d'), desc, intervenant_panne, action)
+                            )
+                            conn.commit()
+                            st.success("Panne enregistrée.")
+                            st.rerun()
 
-    st.markdown("---")
-    st.subheader("Liste des documents")
-    df_docs = pd.read_sql("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
-    st.dataframe(df_docs)
+                st.markdown("---")
+                st.subheader("Historique des pannes")
+                df_pannes = pd.read_sql("SELECT * FROM pannes ORDER BY date DESC", conn)
+                st.dataframe(df_pannes, use_container_width=True)
 
-# --- Page Statistiques ---
-elif menu == "Statistiques":
-    st.header("Statistiques des Contrôles Qualité")
+        elif menu == "Pièces Détachées":
+            with st.expander("➕ Ajouter une nouvelle pièce"):
+                with st.form("new_piece_form", clear_on_submit=True):
+                    nom_piece = st.text_input("Nom de la pièce")
+                    ref_piece = st.text_input("Référence")
+                    date_cmd = st.date_input("Date de commande")
+                    fournisseur = st.text_input("Fournisseur")
+                    date_rec = st.date_input("Date de réception")
+                    submitted = st.form_submit_button("Ajouter la pièce")
+                    if submitted and nom_piece:
+                        cursor.execute(
+                            "INSERT INTO pieces_detachees (nom, ref, date_commande, fournisseur, date_reception) VALUES (?, ?, ?, ?, ?)",
+                            (nom_piece, ref_piece, date_cmd.strftime('%Y-%m-%d'), fournisseur, date_rec.strftime('%Y-%m-%d'))
+                        )
+                        conn.commit()
+                        st.success("Pièce ajoutée au stock.")
+                        st.rerun()
 
-    df_cq = pd.read_sql("SELECT * FROM controle_qualite", conn)
-    if df_cq.empty:
-        st.info("Aucun contrôle qualité enregistré.")
-    else:
-        # Filtrage par type
-        types_dispo = df_cq['type'].unique()
-        type_sel = st.selectbox("Filtrer par type", options=types_dispo, index=0)
-        df_filtre = df_cq[df_cq['type'] == type_sel]
+            st.markdown("---")
+            st.subheader("Inventaire des pièces")
+            df_pieces = pd.read_sql("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
+            st.dataframe(df_pieces, use_container_width=True)
 
-        # Histogramme mensuel
-        df_filtre['date'] = pd.to_datetime(df_filtre['date'])
-        hist_data = df_filtre.groupby(df_filtre['date'].dt.to_period("M")).size().reset_index(name='Nombre')
-        hist_data['date'] = hist_data['date'].dt.to_timestamp()
+        elif menu == "Documents":
+            with st.expander("➕ Ajouter un nouveau document"):
+                with st.form("new_doc_form", clear_on_submit=True):
+                    nom_doc = st.text_input("Nom du document")
+                    type_doc = st.selectbox("Type", ["Manuel", "Procédure", "Rapport", "Autre"])
+                    fichier = st.file_uploader("Charger le fichier (PDF, TXT, etc.)")
+                    submitted = st.form_submit_button("Ajouter le document")
+                    if submitted and fichier and nom_doc:
+                        blob = fichier.read()
+                        cursor.execute("INSERT INTO documents (nom, type, fichier) VALUES (?, ?, ?)", (nom_doc, type_doc, blob))
+                        conn.commit()
+                        st.success("Document ajouté.")
+                        st.rerun()
+                    elif submitted:
+                        st.error("Veuillez renseigner un nom et choisir un fichier.")
 
-        fig = px.bar(hist_data, x='date', y='Nombre', title=f"Nombre de contrôles qualité ({type_sel}) par mois")
-        st.plotly_chart(fig, use_container_width=True)
+            st.markdown("---")
+            st.subheader("Liste des documents")
+            df_docs = pd.read_sql("SELECT id, nom, type FROM documents ORDER BY id DESC", conn)
+            st.dataframe(df_docs, use_container_width=True)
+            # La logique de téléchargement peut être ajoutée ici si nécessaire
 
-# --- Page Rappels ---
-elif menu == "Rappels":
-    st.header("Envoi de Rappels par Email")
+        elif menu == "Statistiques":
+            df_cq = pd.read_sql("SELECT * FROM controle_qualite", conn)
+            if df_cq.empty:
+                st.info("Aucune donnée de contrôle qualité disponible pour générer des statistiques.")
+            else:
+                st.subheader("Analyse des Contrôles Qualité")
+                df_cq['date'] = pd.to_datetime(df_cq['date'])
+                
+                # Graphique 1: Nombre de contrôles par type
+                fig1 = px.pie(df_cq, names='type', title='Répartition des contrôles par type')
+                st.plotly_chart(fig1, use_container_width=True)
 
-    dest = st.text_input("Email destinataire")
-    sujet = st.text_input("Sujet", value="Rappel Contrôle Qualité Gamma Caméra")
-    message = st.text_area("Message", value="Bonjour,\n\nCeci est un rappel automatique pour effectuer un contrôle qualité.\n\nCordialement,\nMaryam Abia")
+                # Graphique 2: Nombre de contrôles par mois
+                df_cq['mois'] = df_cq['date'].dt.to_period("M").astype(str)
+                count_by_month = df_cq.groupby('mois').size().reset_index(name='nombre')
+                fig2 = px.bar(count_by_month, x='mois', y='nombre', title='Nombre de contrôles effectués par mois', labels={'mois': 'Mois', 'nombre': 'Nombre de contrôles'})
+                st.plotly_chart(fig2, use_container_width=True)
 
-    if st.button("Envoyer le rappel"):
-        if dest.strip() == "" or sujet.strip() == "" or message.strip() == "":
-            st.error("Tous les champs doivent être remplis.")
-        else:
-            if envoyer_email(dest, sujet, message):
-                st.success("Email envoyé avec succès.")
+        elif menu == "Rappels":
+            st.subheader("Envoyer un rappel par Email")
+            with st.form("email_form"):
+                dest = st.text_input("Email du destinataire")
+                sujet = st.text_input("Sujet", "Rappel: Contrôle Qualité Gamma Caméra")
+                message = st.text_area("Message", "Bonjour,\n\nCeci est un rappel pour effectuer le contrôle qualité périodique de la gamma caméra.\n\nCordialement,\nL'équipe de maintenance.")
+                submitted = st.form_submit_button("📧 Envoyer le rappel")
+                if submitted:
+                    if dest and sujet and message:
+                        if envoyer_email(dest, sujet, message):
+                            st.success(f"Email envoyé avec succès à {dest}.")
+                        # L'erreur est gérée dans la fonction envoyer_email
+                    else:
+                        st.error("Veuillez remplir tous les champs.")
 
-# Footer
-st.markdown("""
-<div class="footer">
-    &copy; 2025 Maryam Abia – Master Instrumentation et Analyse Biomédicale
-</div>
-""", unsafe_allow_html=True)
+# --- PIED DE PAGE ---
+st.markdown(
+    '<div class="footer">&copy; 2025 Maryam Abia – Tous droits réservés</div>',
+    unsafe_allow_html=True
+)
