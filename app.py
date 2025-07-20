@@ -7,14 +7,18 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# --- CONFIGURATION DE LA PAGE ---
+# ------------------------------------------------------------------
+#  CONFIGURATION DE LA PAGE
+# ------------------------------------------------------------------
 st.set_page_config(
     page_title="Gestion Gamma Caméra",
     page_icon="🔬",
     layout="wide"
 )
 
-# --- CONNEXION À LA BASE DE DONNÉES ---
+# ------------------------------------------------------------------
+#  CONNEXION À LA BASE DE DONNÉES
+# ------------------------------------------------------------------
 @st.cache_resource
 def init_connection():
     return sqlite3.connect("gamma_camera.db", check_same_thread=False)
@@ -22,7 +26,9 @@ def init_connection():
 conn = init_connection()
 cursor = conn.cursor()
 
-# --- CRÉATION DES TABLES (si elles n'existent pas) ---
+# ------------------------------------------------------------------
+#  CRÉATION DES TABLES (si elles n'existent pas)
+# ------------------------------------------------------------------
 def create_tables():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS utilisateurs (
@@ -43,12 +49,14 @@ def create_tables():
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS documents (
         id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT, type TEXT, fichier BLOB, nom_fichier_original TEXT
-    )''') # J'ai ajouté nom_fichier_original pour une meilleure gestion
+    )''')  # nom_fichier_original pour meilleure gestion
     conn.commit()
 
 create_tables()
 
-# --- STYLE CSS PERSONNALISÉ ---
+# ------------------------------------------------------------------
+#  STYLE CSS PERSONNALISÉ
+# ------------------------------------------------------------------
 st.markdown("""
 <style>
     /* --- Général --- */
@@ -123,17 +131,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- FONCTIONS UTILITAIRES ---
+# ------------------------------------------------------------------
+#  FONCTION EMAIL
+# ------------------------------------------------------------------
 def envoyer_email(destinataire, sujet, message):
+    """Envoi d'un email simple via SMTP Gmail.
+    ⚠️ Pour la production, placez vos identifiants dans st.secrets et NON en clair dans le code.
+    """
     SENDER_EMAIL = "maryamabia14@gmail.com"
-    APP_PASSWORD = "wyva itgr vrmu keet"
-    
+    APP_PASSWORD = "wyva itgr vrmu keet"  # <-- pensez à sécuriser !
+
     msg = MIMEMultipart()
     msg["From"] = SENDER_EMAIL
     msg["To"] = destinataire
     msg["Subject"] = sujet
     msg.attach(MIMEText(message, "plain"))
-    
+
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(SENDER_EMAIL, APP_PASSWORD)
@@ -143,13 +156,38 @@ def envoyer_email(destinataire, sujet, message):
         st.error(f"Erreur lors de l'envoi de l'email : {e}")
         return False
 
-# --- MENU LATÉRAL ---
+# ------------------------------------------------------------------
+#  UTILITAIRES SQL (NOUVEAU : UPDATE & DELETE)
+# ------------------------------------------------------------------
+# Ces petites fonctions sont ajoutées sans toucher à la logique existante.
+# Elles facilitent la mise à jour et la suppression d'enregistrements.
+
+def update_record(table, record_id, data_dict):
+    """Met à jour un enregistrement dans n'importe quelle table.
+    data_dict = {colonne: nouvelle_valeur, ...}
+    """
+    if not data_dict:
+        return
+    set_clause = ", ".join([f"{col}=?" for col in data_dict.keys()])
+    values = list(data_dict.values()) + [record_id]
+    cursor.execute(f"UPDATE {table} SET {set_clause} WHERE id=?", values)
+    conn.commit()
+
+
+def delete_record(table, record_id):
+    cursor.execute(f"DELETE FROM {table} WHERE id=?", (record_id,))
+    conn.commit()
+
+
+# ------------------------------------------------------------------
+#  MENU LATÉRAL
+# ------------------------------------------------------------------
 with st.sidebar:
     st.markdown(
         f'<img src="https://fmpm.uca.ma/wp-content/uploads/2024/04/logofm-1.png" class="sidebar-logo">',
         unsafe_allow_html=True
      )
-    
+
     st.markdown("## 🧭 Navigation")
     menu = st.radio(
         "Choisissez une section :",
@@ -165,13 +203,15 @@ with st.sidebar:
     st.markdown("---")
     st.info("**Développé par Maryam Abia**\n\nMaster Instrumentation et Analyse Biomédicale")
 
-# --- CORPS PRINCIPAL DE L'APPLICATION ---
+# ------------------------------------------------------------------
+#  CORPS PRINCIPAL
+# ------------------------------------------------------------------
 main_container = st.container()
 
 if menu == "Accueil":
     with main_container:
         st.markdown('<div class="banner"><h1>Interface de Gestion - Gamma Caméra</h1></div>', unsafe_allow_html=True)
-        
+
         col1, col2 = st.columns([2, 1])
         with col1:
             st.subheader("Bienvenue dans le futur de la gestion biomédicale")
@@ -197,7 +237,9 @@ if menu == "Accueil":
             st.write("La gamma caméra est un détecteur qui capte les rayonnements gamma émis par les radiotraceurs pour créer une image fonctionnelle (scintigraphie) de l'organe étudié.")
             st.markdown('<div class="slim-image"><img src="https://marketing.webassets.siemens-healthineers.com/2c2b0aa34ea22838/2e0bbcc28c19/v/9b9d3e5cf4b4/siemens-healthineers-mi-symbia-evo-excel.jpg"></div>', unsafe_allow_html=True )
 
-# --- AUTRES PAGES ---
+# ------------------------------------------------------------------
+#  UTILISATEURS
+# ------------------------------------------------------------------
 else:
     with main_container:
         st.header(f"📊 {menu}")
@@ -221,6 +263,29 @@ else:
             df_users = pd.read_sql("SELECT * FROM utilisateurs ORDER BY id DESC", conn)
             st.dataframe(df_users, use_container_width=True)
 
+            # -------------------- NOUVEAU : MODIFIER / SUPPRIMER --------------------
+            if not df_users.empty:
+                st.markdown("### Modifier ou supprimer un utilisateur")
+                user_id = st.selectbox("Choisir l'ID à modifier / supprimer", df_users["id"], key="edit_user_select")
+                row = df_users[df_users["id"] == user_id].iloc[0]
+                with st.form(f"edit_user_form_{user_id}"):
+                    new_nom = st.text_input("Nom", row["nom"])
+                    new_role = st.selectbox("Rôle", ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"], index=(["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"].index(row["role"]) if row["role"] in ["Technicien", "Ingénieur", "Médecin", "Physicien Médical", "Autre"] else 0))
+                    colu1, colu2 = st.columns(2)
+                    update_u = colu1.form_submit_button("💾 Enregistrer")
+                    delete_u = colu2.form_submit_button("🗑 Supprimer")
+                    if update_u:
+                        update_record("utilisateurs", user_id, {"nom": new_nom.strip(), "role": new_role})
+                        st.success("Utilisateur mis à jour.")
+                        st.rerun()
+                    if delete_u:
+                        delete_record("utilisateurs", user_id)
+                        st.warning("Utilisateur supprimé.")
+                        st.rerun()
+
+# ------------------------------------------------------------------
+#  CONTRÔLE QUALITÉ
+# ------------------------------------------------------------------
         elif menu == "Contrôle Qualité":
             intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
             if not intervenants:
@@ -237,17 +302,50 @@ else:
                         if submitted:
                             cursor.execute(
                                 "INSERT INTO controle_qualite (date, type, test, intervenant, resultat) VALUES (?, ?, ?, ?, ?)",
-                                (date_cq.strftime('%Y-%m-%d'), type_cq, test_cq, intervenant_cq, resultat_cq)
+                                (pd.to_datetime(date_cq).strftime('%Y-%m-%d'), type_cq, test_cq, intervenant_cq, resultat_cq)
                             )
                             conn.commit()
                             st.success("Contrôle ajouté avec succès.")
                             st.rerun()
-                
+
                 st.markdown("---")
                 st.subheader("Historique des contrôles")
                 df_cq = pd.read_sql("SELECT * FROM controle_qualite ORDER BY date DESC", conn)
                 st.dataframe(df_cq, use_container_width=True)
 
+                # -------------------- NOUVEAU : MODIFIER / SUPPRIMER --------------------
+                if not df_cq.empty:
+                    st.markdown("### Modifier ou supprimer un contrôle")
+                    cq_id = st.selectbox("Choisir l'ID du contrôle", df_cq["id"], key="edit_cq_select")
+                    row = df_cq[df_cq["id"] == cq_id].iloc[0]
+                    with st.form(f"edit_cq_form_{cq_id}"):
+                        date_edit = st.date_input("Date", pd.to_datetime(row["date"]))
+                        type_options = ["Journalier", "Hebdomadaire", "Mensuel", "Annuel"]
+                        type_edit = st.selectbox("Type", type_options, index=(type_options.index(row["type"]) if row["type"] in type_options else 0))
+                        test_edit = st.text_input("Test", row["test"])
+                        intervenant_edit = st.selectbox("Intervenant", intervenants, index=(intervenants.index(row["intervenant"]) if row["intervenant"] in intervenants else 0))
+                        result_edit = st.text_area("Résultat / Observation", row["resultat"])
+                        colc1, colc2 = st.columns(2)
+                        update_c = colc1.form_submit_button("💾 Enregistrer")
+                        delete_c = colc2.form_submit_button("🗑 Supprimer")
+                        if update_c:
+                            update_record("controle_qualite", cq_id, {
+                                "date": pd.to_datetime(date_edit).strftime('%Y-%m-%d'),
+                                "type": type_edit,
+                                "test": test_edit,
+                                "intervenant": intervenant_edit,
+                                "resultat": result_edit
+                            })
+                            st.success("Contrôle mis à jour.")
+                            st.rerun()
+                        if delete_c:
+                            delete_record("controle_qualite", cq_id)
+                            st.warning("Contrôle supprimé.")
+                            st.rerun()
+
+# ------------------------------------------------------------------
+#  TYPES DE TESTS (pas de BDD => pas d'édition nécessaires)
+# ------------------------------------------------------------------
         elif menu == "Types de Tests":
             tests_info = {
                 "Test de linéarité": "S'assure que la caméra restitue les formes sans distorsion.",
@@ -257,11 +355,14 @@ else:
                 "Test de sensibilité": "Évalue la réponse du système à un radionucléide d’activité connue.",
                 "Mesure de la résolution énergétique (RE)": "Mesure la capacité à distinguer les photons d'énergies proches."
             }
-            
+
             for i, (nom_test, description) in enumerate(tests_info.items()):
                 with st.container():
                     st.markdown(f'<div class="card"><h3>{nom_test}</h3><p>{description}</p></div>', unsafe_allow_html=True)
 
+# ------------------------------------------------------------------
+#  PANNES
+# ------------------------------------------------------------------
         elif menu == "Pannes":
             intervenants = pd.read_sql("SELECT nom FROM utilisateurs", conn)["nom"].tolist()
             if not intervenants:
@@ -277,7 +378,7 @@ else:
                         if submitted:
                             cursor.execute(
                                 "INSERT INTO pannes (date, description, intervenant, action) VALUES (?, ?, ?, ?)",
-                                (date_panne.strftime('%Y-%m-%d'), desc, intervenant_panne, action)
+                                (pd.to_datetime(date_panne).strftime('%Y-%m-%d'), desc, intervenant_panne, action)
                             )
                             conn.commit()
                             st.success("Panne enregistrée.")
@@ -288,6 +389,36 @@ else:
                 df_pannes = pd.read_sql("SELECT * FROM pannes ORDER BY date DESC", conn)
                 st.dataframe(df_pannes, use_container_width=True)
 
+                # -------------------- NOUVEAU : MODIFIER / SUPPRIMER --------------------
+                if not df_pannes.empty:
+                    st.markdown("### Modifier ou supprimer une panne")
+                    panne_id = st.selectbox("Choisir l'ID de la panne", df_pannes["id"], key="edit_panne_select")
+                    row = df_pannes[df_pannes["id"] == panne_id].iloc[0]
+                    with st.form(f"edit_panne_form_{panne_id}"):
+                        date_edit = st.date_input("Date", pd.to_datetime(row["date"]))
+                        desc_edit = st.text_area("Description", row["description"])
+                        intervenant_edit = st.selectbox("Intervenant", intervenants, index=(intervenants.index(row["intervenant"]) if row["intervenant"] in intervenants else 0))
+                        action_edit = st.text_area("Action corrective", row["action"])
+                        colp1, colp2 = st.columns(2)
+                        update_p = colp1.form_submit_button("💾 Enregistrer")
+                        delete_p = colp2.form_submit_button("🗑 Supprimer")
+                        if update_p:
+                            update_record("pannes", panne_id, {
+                                "date": pd.to_datetime(date_edit).strftime('%Y-%m-%d'),
+                                "description": desc_edit,
+                                "intervenant": intervenant_edit,
+                                "action": action_edit
+                            })
+                            st.success("Panne mise à jour.")
+                            st.rerun()
+                        if delete_p:
+                            delete_record("pannes", panne_id)
+                            st.warning("Panne supprimée.")
+                            st.rerun()
+
+# ------------------------------------------------------------------
+#  PIÈCES DÉTACHÉES
+# ------------------------------------------------------------------
         elif menu == "Pièces Détachées":
             with st.expander("➕ Ajouter une nouvelle pièce"):
                 with st.form("new_piece_form", clear_on_submit=True):
@@ -300,7 +431,7 @@ else:
                     if submitted and nom_piece:
                         cursor.execute(
                             "INSERT INTO pieces_detachees (nom, ref, date_commande, fournisseur, date_reception) VALUES (?, ?, ?, ?, ?)",
-                            (nom_piece, ref_piece, date_cmd.strftime('%Y-%m-%d'), fournisseur, date_rec.strftime('%Y-%m-%d'))
+                            (nom_piece, ref_piece, pd.to_datetime(date_cmd).strftime('%Y-%m-%d'), fournisseur, pd.to_datetime(date_rec).strftime('%Y-%m-%d'))
                         )
                         conn.commit()
                         st.success("Pièce ajoutée au stock.")
@@ -311,7 +442,38 @@ else:
             df_pieces = pd.read_sql("SELECT * FROM pieces_detachees ORDER BY date_commande DESC", conn)
             st.dataframe(df_pieces, use_container_width=True)
 
-        # --- SECTION DOCUMENTS MODIFIÉE ---
+            # -------------------- NOUVEAU : MODIFIER / SUPPRIMER --------------------
+            if not df_pieces.empty:
+                st.markdown("### Modifier ou supprimer une pièce")
+                piece_id = st.selectbox("Choisir l'ID de la pièce", df_pieces["id"], key="edit_piece_select")
+                row = df_pieces[df_pieces["id"] == piece_id].iloc[0]
+                with st.form(f"edit_piece_form_{piece_id}"):
+                    nom_edit = st.text_input("Nom", row["nom"])
+                    ref_edit = st.text_input("Référence", row["ref"])
+                    date_cmd_edit = st.date_input("Date commande", pd.to_datetime(row["date_commande"]))
+                    four_edit = st.text_input("Fournisseur", row["fournisseur"])
+                    date_rec_edit = st.date_input("Date réception", pd.to_datetime(row["date_reception"]))
+                    colpi1, colpi2 = st.columns(2)
+                    update_pi = colpi1.form_submit_button("💾 Enregistrer")
+                    delete_pi = colpi2.form_submit_button("🗑 Supprimer")
+                    if update_pi:
+                        update_record("pieces_detachees", piece_id, {
+                            "nom": nom_edit,
+                            "ref": ref_edit,
+                            "date_commande": pd.to_datetime(date_cmd_edit).strftime('%Y-%m-%d'),
+                            "fournisseur": four_edit,
+                            "date_reception": pd.to_datetime(date_rec_edit).strftime('%Y-%m-%d')
+                        })
+                        st.success("Pièce mise à jour.")
+                        st.rerun()
+                    if delete_pi:
+                        delete_record("pieces_detachees", piece_id)
+                        st.warning("Pièce supprimée.")
+                        st.rerun()
+
+# ------------------------------------------------------------------
+#  DOCUMENTS
+# ------------------------------------------------------------------
         elif menu == "Documents":
             with st.expander("➕ Ajouter un nouveau document"):
                 with st.form("new_doc_form", clear_on_submit=True):
@@ -331,25 +493,20 @@ else:
 
             st.markdown("---")
             st.subheader("Liste des documents")
-            
-            # Récupérer tous les documents de la base de données
             cursor.execute("SELECT id, nom, type, fichier, nom_fichier_original FROM documents ORDER BY id DESC")
             documents = cursor.fetchall()
 
             if not documents:
                 st.info("Aucun document n'a été ajouté pour le moment.")
             else:
-                # Créer des colonnes pour un affichage propre
                 col1, col2, col3 = st.columns([2, 1, 1])
                 col1.write("**Nom du Document**")
                 col2.write("**Type**")
                 col3.write("**Action**")
                 st.markdown("---")
 
-                # Afficher chaque document avec un bouton de téléchargement
                 for doc in documents:
                     doc_id, doc_nom, doc_type, doc_fichier, doc_nom_original = doc
-                    
                     col1, col2, col3 = st.columns([2, 1, 1])
                     with col1:
                         st.write(doc_nom)
@@ -359,11 +516,52 @@ else:
                         st.download_button(
                             label="📥 Télécharger",
                             data=doc_fichier,
-                            file_name=doc_nom_original, # Utilise le nom de fichier original
-                            key=f"download_{doc_id}" # Clé unique pour chaque bouton
+                            file_name=doc_nom_original,
+                            key=f"download_{doc_id}"
                         )
                 st.markdown("---")
 
+                # -------------------- NOUVEAU : MODIFIER / SUPPRIMER --------------------
+                st.markdown("### Modifier ou supprimer un document")
+                doc_ids = [d[0] for d in documents]
+                doc_id_sel = st.selectbox("Choisir l'ID du document", doc_ids, key="edit_doc_select")
+                # récupérer ligne sélectionnée
+                for d in documents:
+                    if d[0] == doc_id_sel:
+                        _, doc_nom_sel, doc_type_sel, doc_file_sel, doc_orig_sel = d
+                        break
+                with st.form(f"edit_doc_form_{doc_id_sel}"):
+                    new_nom_doc = st.text_input("Nom", doc_nom_sel)
+                    new_type_doc = st.selectbox("Type", ["Manuel", "Procédure", "Rapport", "Autre"], index=( ["Manuel", "Procédure", "Rapport", "Autre"].index(doc_type_sel) if doc_type_sel in ["Manuel", "Procédure", "Rapport", "Autre"] else 0))
+                    new_file = st.file_uploader("Remplacer le fichier (optionnel)")
+                    cold1, cold2 = st.columns(2)
+                    update_d = cold1.form_submit_button("💾 Enregistrer")
+                    delete_d = cold2.form_submit_button("🗑 Supprimer")
+                    if update_d:
+                        if new_file is not None:
+                            blob_new = new_file.read()
+                            nom_orig_new = new_file.name
+                            update_record("documents", doc_id_sel, {
+                                "nom": new_nom_doc,
+                                "type": new_type_doc,
+                                "fichier": blob_new,
+                                "nom_fichier_original": nom_orig_new
+                            })
+                        else:
+                            update_record("documents", doc_id_sel, {
+                                "nom": new_nom_doc,
+                                "type": new_type_doc
+                            })
+                        st.success("Document mis à jour.")
+                        st.rerun()
+                    if delete_d:
+                        delete_record("documents", doc_id_sel)
+                        st.warning("Document supprimé.")
+                        st.rerun()
+
+# ------------------------------------------------------------------
+#  STATISTIQUES
+# ------------------------------------------------------------------
         elif menu == "Statistiques":
             df_cq = pd.read_sql("SELECT * FROM controle_qualite", conn)
             if df_cq.empty:
@@ -371,7 +569,7 @@ else:
             else:
                 st.subheader("Analyse des Contrôles Qualité")
                 df_cq['date'] = pd.to_datetime(df_cq['date'])
-                
+
                 fig1 = px.pie(df_cq, names='type', title='Répartition des contrôles par type')
                 st.plotly_chart(fig1, use_container_width=True)
 
@@ -380,6 +578,9 @@ else:
                 fig2 = px.bar(count_by_month, x='mois', y='nombre', title='Nombre de contrôles effectués par mois', labels={'mois': 'Mois', 'nombre': 'Nombre de contrôles'})
                 st.plotly_chart(fig2, use_container_width=True)
 
+# ------------------------------------------------------------------
+#  RAPPELS (EMAIL)
+# ------------------------------------------------------------------
         elif menu == "Rappels":
             st.subheader("Envoyer un rappel par Email")
             with st.form("email_form"):
@@ -394,7 +595,9 @@ else:
                     else:
                         st.error("Veuillez remplir tous les champs.")
 
-# --- PIED DE PAGE ---
+# ------------------------------------------------------------------
+#  PIED DE PAGE
+# ------------------------------------------------------------------
 st.markdown(
     '<div class="footer">&copy; 2025 Maryam Abia – Tous droits réservés</div>',
     unsafe_allow_html=True
