@@ -6,6 +6,11 @@ import plotly.express as px
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score
+import numpy as np
 
 # ------------------------------------------------------------------
 #  CONFIGURATION DE LA PAGE
@@ -577,7 +582,49 @@ else:
                 count_by_month = df_cq.groupby('mois').size().reset_index(name='nombre')
                 fig2 = px.bar(count_by_month, x='mois', y='nombre', title='Nombre de contrôles effectués par mois', labels={'mois': 'Mois', 'nombre': 'Nombre de contrôles'})
                 st.plotly_chart(fig2, use_container_width=True)
+#  NOUVELLE SECTION : PRÉDICTION DES PANNES
+# ------------------------------------------------------------------
+elif menu == "Prédiction des pannes":
+    st.subheader("🔮 Prédiction des pannes (Machine Learning)")
 
+    df_pannes = pd.read_sql("SELECT * FROM pannes", conn)
+    if df_pannes.empty:
+        st.warning("⚠️ Pas assez de données de pannes pour entraîner un modèle.")
+    else:
+        # Prétraitement
+        df_pannes["date"] = pd.to_datetime(df_pannes["date"])
+        df_pannes["jour"] = df_pannes["date"].dt.day
+        df_pannes["mois"] = df_pannes["date"].dt.month
+        df_pannes["année"] = df_pannes["date"].dt.year
+
+        # Encodage
+        le_desc = LabelEncoder()
+        df_pannes["desc_code"] = le_desc.fit_transform(df_pannes["description"].astype(str))
+
+        X = df_pannes[["jour", "mois", "année", "desc_code"]]
+        y = np.ones(len(X))  # On considère qu'une panne = 1 (binaire)
+
+        # Modèle
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        pred = model.predict(X_test)
+        acc = accuracy_score(y_test, pred)
+        st.info(f"Précision du modèle (interne) : {acc*100:.1f}%")
+
+        # Prédiction d'un jour futur
+        st.markdown("### Simulation")
+        future_date = st.date_input("Choisir une date future")
+        future_desc = st.text_input("Description prévue (ex: problème caméra)")
+        if st.button("Prédire"):
+            future_data = pd.DataFrame([{
+                "jour": future_date.day,
+                "mois": future_date.month,
+                "année": future_date.year,
+                "desc_code": le_desc.transform([future_desc]) if future_desc in le_desc.classes_ else [0]
+            }])
+            prob = model.predict_proba(future_data)[:, 1][0]
+            st.success(f"Probabilité estimée de panne : {prob*100:.2f}%")
 # ------------------------------------------------------------------
 #  RAPPELS (EMAIL)
 # ------------------------------------------------------------------
